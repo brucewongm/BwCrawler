@@ -1,6 +1,3 @@
-import re
-from sys import prefix
-
 from CrawlerBase import *
 from CrawlerBaseExclusion import *
 
@@ -234,7 +231,7 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
             time.sleep(5)
             if not crawl_today_successfully:
                 continue
-            WebpagePictureDownloader.download_webpage_pictures(link_url)
+            WebpagePictureDownloader.download_webpage_pictures(link_url,self.picture_download_directory)
             if counter >= self.crawl_number:
                 break
                 pass
@@ -276,7 +273,7 @@ def task1():
     crawl_number = 15
     ins = CrawlerNewsUkraineRbcUa(target_url, None, crawl_number)
     ins.set_referred_url(referred_url)
-    ins.set_crawl_today(True)
+    # ins.set_crawl_today(True)
     ins.run()
     pass
 

@@ -239,8 +239,9 @@ class CrawlerBase(object):
     def initiate_environment(self):
         # 设置文件路径
         # parent_folder = os.path.dirname(self.current_directory)
-        self.result_directory = os.path.join(self.current_directory, 'results')
-        self.picture_download_directory = os.path.join(self.current_directory, 'downloaded_images')
+        today = time.strftime("%Y-%m-%d", time.localtime())
+        self.result_directory = os.path.join(self.current_directory, 'results{}'.format(today))
+        self.picture_download_directory = os.path.join(self.current_directory, 'downloaded_images{}'.format(today))
         self.result_abs_txt_file_name = os.path.join(self.result_directory, self.relative_txt_file_name)
         self.result_abs_word_file_name = os.path.join(self.result_directory, self.relative_word_file_name)
         if not os.path.exists(self.result_directory):
@@ -453,14 +454,14 @@ class WebpagePictureDownloader(object):
             print(f"Error downloading the image {url}: {e}")
 
     @classmethod
-    def download_webpage_pictures(cls, url: str):
+    def download_webpage_pictures(cls, url: str, save_folder = 'downloaded_images' ):
         # url = "https://newsukraine.rbc.ua/news/ukrainian-partisans-locate-strategic-military-1731456813.html"
         page_content = cls.fetch_page_content(url)
         if page_content:
             base_url = "{0.scheme}://{0.netloc}".format(urllib.parse.urlparse(url))
             image_link_list = cls.parse_page_for_image_list(page_content, base_url)
             # 创建一个文件夹来保存图片
-            save_folder = 'downloaded_images'
+            # save_folder = 'downloaded_images'
             os.makedirs(save_folder, exist_ok=True)
             # 下载每张图片
             url_without_suffix = url.rsplit('.', maxsplit=1)[0]
