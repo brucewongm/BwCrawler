@@ -427,7 +427,7 @@ class WebpagePictureDownloader(object):
         for img_tag in soup.find_all('img'):
             # 获取图片的 src 属性
             img_url = img_tag.get('src')
-            print('>' * 100)
+            print('\n'+'>' * 100)
             print('this image source:', img_url)
             # 如果 src 是相对路径，则将其转换为绝对路径
             if not urllib.parse.urlparse(img_url).netloc:
@@ -467,7 +467,7 @@ class WebpagePictureDownloader(object):
             # temp_name_list = re.split(pattern=r'[/_\-]', string=url_without_suffix, flags=re.I)
             raw_file_name = url_without_suffix.rsplit('/')[-1]
             for idx, img_url in enumerate(image_link_list):
-                print('>' * 100)
+                print('\n'+'>' * 100)
                 print('Trying downloading picture from link:', img_url)
                 # 构造文件名，例如 image1.jpg, image2.png 等
                 file_ext = img_url.split('.')[-1]  # 获取文件扩展名

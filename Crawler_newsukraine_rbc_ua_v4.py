@@ -273,7 +273,7 @@ pass
 def task1():
     target_url = 'https://newsukraine.rbc.ua/news'
     referred_url = 'https://newsukraine.rbc.ua/'
-    crawl_number = 2
+    crawl_number = 15
     ins = CrawlerNewsUkraineRbcUa(target_url, None, crawl_number)
     ins.set_referred_url(referred_url)
     ins.set_crawl_today(True)
