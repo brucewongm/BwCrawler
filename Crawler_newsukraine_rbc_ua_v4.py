@@ -208,7 +208,7 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
         counter = 0
         for link_text, link_url in link_text_link_url_tuple_list:
             counter += 1
-            print('\ncrawling main page number {}'.format(str(counter)))
+            print('\ncrawling main page number {}/{}'.format(str(counter),str(self.crawl_number)))
             self.crawl_one_url_content(link_text, link_url, self.result_abs_txt_file_name)
             time.sleep(5)
             if counter >= self.crawl_number:
