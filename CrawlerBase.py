@@ -139,8 +139,12 @@ def pause(seconds: int):
 def compose_english_chinese_doc_files():
     print('Composing doc files...')
     current_folder = os.getcwd()
-    parent_folder = os.path.dirname(current_folder)
-    target_folder = os.path.join(parent_folder, 'results')
+    # parent_folder = os.path.dirname(current_folder)
+    # target_folder = os.path.join(parent_folder, 'results')
+    today = time.strftime("%Y-%m-%d", time.localtime())
+    target_folder = os.path.join(os.getcwd(), 'results{}'.format(today))
+    print('target folder:{}'.format(target_folder))
+    #
     english_docx = ''
     chinese_docx = ''
     # 遍历当前文件夹下的所有文件
@@ -478,7 +482,7 @@ class WebpagePictureDownloader(object):
                 filename = os.path.join(save_folder, f'{raw_file_name}_image_{idx + 1}.{file_ext}')
                 print('Downloading picture with name:', filename)
                 cls.download_one_image(img_url, filename)
-                time.sleep(1)
+                time.sleep(3)
                 pass
             pass
         dprint('Download pictures of page \n{}\nsuccessfully!'.format(url))

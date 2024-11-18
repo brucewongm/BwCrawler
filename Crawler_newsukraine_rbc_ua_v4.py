@@ -180,7 +180,7 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
                 for element in soup.find_all(['h1', 'h2', 'h3', 'p', 'ul', 'li']):
                     if element.name in ['h1', 'h2', 'h3']:
                         file.write(element.text.strip())
-                        file.write('\n\n')
+                        file.write('\n')
                         file.flush()
                         pass
                     elif element.name == 'p':
@@ -189,7 +189,7 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
                         file.flush()
                         pass
                     pass
-                file.write('\n')
+                file.write('\n\n')
                 file.flush()
                 pass
             pass
@@ -226,7 +226,7 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
             pass
         counter = 1
         for link_text, link_url in self.link_text_link_url_tuple_list:
-            print('\ncrawling news page link number {}'.format(str(counter)))
+            print('\ncrawling news page link number {}/{}'.format(str(counter),str(self.crawl_number)))
             crawl_today_successfully = self.crawl_one_url_content(link_text, link_url, self.result_abs_txt_file_name)
             time.sleep(5)
             if not crawl_today_successfully:
