@@ -177,6 +177,9 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
                     return False
                 pass
             with open(filename, mode='a+', encoding='utf-8') as file:
+                file.write(link_text)
+                file.write('\n')
+                file.flush()
                 for element in soup.find_all(['h1', 'h2', 'h3', 'p', 'ul', 'li']):
                     if element.name in ['h1', 'h2', 'h3']:
                         file.write(element.text.strip())
@@ -222,7 +225,7 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
         # link_text_link_url_tuple_list = self.extract_response_title_link()
         #
         with open(self.result_abs_txt_file_name, 'w') as file:
-            file.write('')
+            file.write('\ntitle:\n')
             pass
         counter = 1
         for link_text, link_url in self.link_text_link_url_tuple_list:
