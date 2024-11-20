@@ -177,6 +177,7 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
                     return False
                 pass
             with open(filename, mode='a+', encoding='utf-8') as file:
+                file.write('\ntitle:\n')
                 file.write(link_text)
                 file.write('\n')
                 file.flush()
