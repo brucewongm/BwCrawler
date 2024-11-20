@@ -178,18 +178,18 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
                 pass
             with open(filename, mode='a+', encoding='utf-8') as file:
                 file.write('\ntitle:\n')
-                file.write(link_text)
-                file.write('\n')
+                # file.write(link_text)
+                file.write('    \n')
                 file.flush()
                 for element in soup.find_all(['h1', 'h2', 'h3', 'p', 'ul', 'li']):
                     if element.name in ['h1', 'h2', 'h3']:
                         file.write(element.text.strip())
-                        file.write('\n')
+                        file.write('    \n')
                         file.flush()
                         pass
                     elif element.name == 'p':
                         file.write(element.text.strip())
-                        file.write('\n')
+                        file.write('    \n')
                         file.flush()
                         pass
                     pass
