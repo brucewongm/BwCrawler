@@ -178,7 +178,7 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
                 pass
             with open(filename, mode='a+', encoding='utf-8') as file:
                 file.write('\ntitle:\n')
-                file.write(link_text)
+                #file.write(link_text)
                 file.write('\n')
                 file.flush()
                 for element in soup.find_all(['h1', 'h2', 'h3', 'p', 'ul', 'li']):
