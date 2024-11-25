@@ -13,6 +13,20 @@ from CrawlerBaseExclusion import exclusion
 DebugSwitch = 1
 
 
+def download_image1(url, filename):
+    try:
+        # if True:
+        response = requests.get(url, stream=True)
+        response.raise_for_status()  # 检查请求是否成功
+        with open(filename, 'wb') as f:
+            for chunk in response.iter_content(1024):
+                f.write(chunk)
+        print(f"Downloaded {filename}")
+    except requests.RequestException as e:
+        # else:
+        print(f"Error downloading the image {url}: {e}")
+
+
 def download_image(url, filename):
     # try:
     if True:
@@ -64,7 +78,7 @@ def get_rbc_page_date(soup):
 
 
 def date_match_today(soup):
-    dprint('soup:',soup)
+    dprint('soup:', soup)
     date_match = False
     week_month_date = get_weekday_month_date()
     dprint('value of week_month_date:', week_month_date)
@@ -89,20 +103,6 @@ def verify_http_format(url):
     if found_re:
         result = True
     return result
-
-
-def download_image(url, filename):
-    try:
-        # if True:
-        response = requests.get(url, stream=True)
-        response.raise_for_status()  # 检查请求是否成功
-        with open(filename, 'wb') as f:
-            for chunk in response.iter_content(1024):
-                f.write(chunk)
-        print(f"Downloaded {filename}")
-    except requests.RequestException as e:
-        # else:
-        print(f"Error downloading the image {url}: {e}")
 
 
 def dprint(*args, **kw_args):
@@ -432,7 +432,7 @@ class WebpagePictureDownloader(object):
         for img_tag in soup.find_all('img'):
             # 获取图片的 src 属性
             img_url = img_tag.get('src')
-            print('\n'+'>' * 100)
+            print('\n' + '>' * 100)
             print('this image source:', img_url)
             # 如果 src 是相对路径，则将其转换为绝对路径
             if not urllib.parse.urlparse(img_url).netloc:
@@ -458,7 +458,7 @@ class WebpagePictureDownloader(object):
             print(f"Error downloading the image {url}: {e}")
 
     @classmethod
-    def download_webpage_pictures(cls, url: str, save_folder = 'downloaded_images' ):
+    def download_webpage_pictures(cls, url: str, save_folder='downloaded_images'):
         # url = "https://newsukraine.rbc.ua/news/ukrainian-partisans-locate-strategic-military-1731456813.html"
         page_content = cls.fetch_page_content(url)
         if page_content:
@@ -472,7 +472,7 @@ class WebpagePictureDownloader(object):
             # temp_name_list = re.split(pattern=r'[/_\-]', string=url_without_suffix, flags=re.I)
             raw_file_name = url_without_suffix.rsplit('/')[-1]
             for idx, img_url in enumerate(image_link_list):
-                print('\n'+'>' * 100)
+                print('\n' + '>' * 100)
                 print('Trying downloading picture from link:', img_url)
                 # 构造文件名，例如 image1.jpg, image2.png 等
                 file_ext = img_url.split('.')[-1]  # 获取文件扩展名
@@ -487,6 +487,47 @@ class WebpagePictureDownloader(object):
             pass
         dprint('Download pictures of page \n{}\nsuccessfully!'.format(url))
         pass
+
+    @classmethod
+    def download_webpage_pictures_of_the_size(cls, url, size='650x410', save_folder='downloaded_images'):
+        page_content = cls.fetch_page_content(url)
+        if page_content:
+            base_url = "{0.scheme}://{0.netloc}".format(urllib.parse.urlparse(url))
+            image_link_list = cls.parse_page_for_image_list(page_content, base_url)
+            # 创建一个文件夹来保存图片
+            # save_folder = 'downloaded_images'
+            os.makedirs(save_folder, exist_ok=True)
+            # 下载每张图片
+            url_without_suffix = url.rsplit('.', maxsplit=1)[0]
+            # temp_name_list = re.split(pattern=r'[/_\-]', string=url_without_suffix, flags=re.I)
+            raw_file_name = url_without_suffix.rsplit('/')[-1]
+            for idx, img_url in enumerate(image_link_list):
+                print('\n' + '>' * 100)
+                found_this_size = re.findall(r'\S+_(\d+x\d+)\.jpg', img_url, re.I)
+                if not found_this_size:
+                    continue
+                else:
+                    this_size = found_this_size[0]
+                    pass
+                print('The size of this picture probably is:{}'.format(this_size))
+                print('Target picture size is {}'.format(size))
+                if not size in img_url:
+                    print('This picture will not be downloaded!')
+                    continue
+                print('Trying downloading picture from link:', img_url)
+                # 构造文件名，例如 image1.jpg, image2.png 等
+                file_ext = img_url.split('.')[-1]  # 获取文件扩展名
+                if file_ext not in ['jpg', 'jpeg']:
+                    continue
+                    pass
+                filename = os.path.join(save_folder, f'{raw_file_name}_image_{idx + 1}.{file_ext}')
+                print('Downloading picture with name:', filename)
+                cls.download_one_image(img_url, filename)
+                time.sleep(3)
+                pass
+        pass
+
+    pass
 
 
 class BatchCrawler(CrawlerBase):

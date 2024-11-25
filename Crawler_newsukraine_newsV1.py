@@ -1,3 +1,6 @@
+from time import sleep
+from PIL import Image
+from io import BytesIO
 from CrawlerBase import *
 from CrawlerBaseExclusion import *
 
@@ -178,7 +181,7 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
                 pass
             with open(filename, mode='a+', encoding='utf-8') as file:
                 file.write('\ntitle:\n')
-                #file.write(link_text)
+                # file.write(link_text)
                 file.write('\n')
                 file.flush()
                 for element in soup.find_all(['h1', 'h2', 'h3', 'p', 'ul', 'li']):
@@ -212,7 +215,7 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
         counter = 0
         for link_text, link_url in link_text_link_url_tuple_list:
             counter += 1
-            print('\ncrawling main page number {}/{}'.format(str(counter),str(self.crawl_number)))
+            print('\ncrawling main page number {}/{}'.format(str(counter), str(self.crawl_number)))
             self.crawl_one_url_content(link_text, link_url, self.result_abs_txt_file_name)
             time.sleep(5)
             if counter >= self.crawl_number:
@@ -230,12 +233,13 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
             pass
         counter = 1
         for link_text, link_url in self.link_text_link_url_tuple_list:
-            print('\ncrawling news page link number {}/{}'.format(str(counter),str(self.crawl_number)))
+            print('\ncrawling news page link number {}/{}'.format(str(counter), str(self.crawl_number)))
             crawl_today_successfully = self.crawl_one_url_content(link_text, link_url, self.result_abs_txt_file_name)
             time.sleep(5)
             if not crawl_today_successfully:
                 continue
-            WebpagePictureDownloader.download_webpage_pictures(link_url,self.picture_download_directory)
+            # WebpagePictureDownloader.download_webpage_pictures(link_url, self.picture_download_directory)
+            WebpagePictureDownloader.download_webpage_pictures_of_the_size(link_url, save_folder=self.picture_download_directory)
             if counter >= self.crawl_number:
                 break
                 pass
@@ -282,6 +286,33 @@ def task1():
     pass
 
 
+def task2():
+    url_list = [
+        "https://newsukraine.rbc.ua/static/img/_/t/_tramp_ze_4ce362f2a56fc0da5690a0e52f024de5_1300x820_7d46981567ab4506ec093426c0b48a28_260x164.jpg",
+        "https://newsukraine.rbc.ua/static/img/_/t/_tramp_ze_4ce362f2a56fc0da5690a0e52f024de5_1300x820_7d46981567ab4506ec093426c0b48a28_650x410.jpg"
+    ]
+
+    # 使用requests下载图片
+    for url in url_list:
+        response = requests.get(url)
+        print('mark')
+        # 检查请求是否成功
+        if response.status_code == 200:
+            # 将图片内容载入到BytesIO中
+            image = Image.open(BytesIO(response.content))
+            # 获取图片的宽度和高度
+            width, height = image.size
+            print(f'图片宽度: {width}, 图片高度: {height}')
+        else:
+            print('图片下载失败')
+        pass
+        sleep(3)
+        pass
+    pass
+
+
+pass
 if __name__ == '__main__':
     task1()
-    pass
+    # task2()
+pass
