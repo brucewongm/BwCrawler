@@ -8,7 +8,9 @@ exclusion = """https://newsukraine.rbc.ua/
 ua https://www.rbc.ua/
 x https://x.com/NewsUkraineRBC
 en javascript:;
+https://whatsapp.com/channel/0029VaVYmRP0rGiPdNM12L2g
 https://newsukraine.rbc.ua/search
+https://twitter.com/NewsUkraineRBC
 https://www.facebook.com/NewsUkraineRBC/
 ru https://www.rbc.ua/ukr
 War in Ukraine https://newsukraine.rbc.ua/war-in-ukraine
@@ -278,7 +280,7 @@ pass
 def task1():
     target_url = 'https://newsukraine.rbc.ua/news'
     referred_url = 'https://newsukraine.rbc.ua/'
-    crawl_number = 15
+    crawl_number = 20
     ins = CrawlerNewsUkraineRbcUa(target_url, None, crawl_number)
     ins.set_referred_url(referred_url)
     # ins.set_crawl_today(True)
