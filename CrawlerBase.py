@@ -1,9 +1,13 @@
 import datetime
 import os
 import re
+from pprint import pprint
+
 import requests
 import time
 import urllib.parse
+
+from Tools.demo.sortvisu import steps
 from bs4 import BeautifulSoup
 from docx import Document
 from fake_useragent import UserAgent
@@ -39,6 +43,17 @@ def download_image(url, filename):
     # except requests.RequestException as e:
     else:
         print(f"Error downloading the image {url}: {e}")
+    pass
+
+
+def count_down_seconds(second: int):
+    for i in range(second + 1):
+        left = second - i
+        print('\rCounting down hold-off time {}s'.format(str(left)), end='')
+        time.sleep(1)
+        pass
+    print('\n')
+    pass
 
 
 def moment():
@@ -219,6 +234,8 @@ class CrawlerBase(object):
         self.referred_url = target_url
         self.response = None
         self.response_text = None
+        self.finished_target_url_log_file = None
+        self.finished_url_list = None
         dprint('setting target url:', self.target_url)
         if result_txt_file_name:
             self.relative_txt_file_name = result_txt_file_name
@@ -254,6 +271,14 @@ class CrawlerBase(object):
         if not os.path.exists(self.picture_download_directory):
             os.makedirs(self.picture_download_directory)
             pass
+        # log file
+        self.finished_target_url_log_file = os.path.join(self.result_directory, 'finished_target_url.txt')
+        file_object = open(self.finished_target_url_log_file, 'r+', encoding='utf-8')
+        url_lines = file_object.readlines()
+        file_object.close()
+        self.finished_url_list = [_.strip() for _ in url_lines]
+        print('Finished urls:')
+        pprint(self.finished_url_list)
         # 设置请求头，模拟正常用户的浏览器请求
         ua = UserAgent()
         try:
@@ -447,6 +472,7 @@ class WebpagePictureDownloader(object):
     def download_one_image(cls, url, filename):
         # try:
         if True:
+            dprint('Requesting this image url...\r')
             response = requests.get(url, stream=True)
             response.raise_for_status()  # 检查请求是否成功
             with open(filename, 'wb') as f:
@@ -482,7 +508,8 @@ class WebpagePictureDownloader(object):
                 filename = os.path.join(save_folder, f'{raw_file_name}_image_{idx + 1}.{file_ext}')
                 print('Downloading picture with name:', filename)
                 cls.download_one_image(img_url, filename)
-                time.sleep(3)
+                # time.sleep(3)
+                count_down_seconds(3)
                 pass
             pass
         dprint('Download pictures of page \n{}\nsuccessfully!'.format(url))
@@ -490,6 +517,7 @@ class WebpagePictureDownloader(object):
 
     @classmethod
     def download_webpage_pictures_of_the_size(cls, url, size='650x410', save_folder='downloaded_images'):
+        print('Fetching page content before downloading pictures...')
         page_content = cls.fetch_page_content(url)
         if page_content:
             base_url = "{0.scheme}://{0.netloc}".format(urllib.parse.urlparse(url))
@@ -523,7 +551,8 @@ class WebpagePictureDownloader(object):
                 filename = os.path.join(save_folder, f'{raw_file_name}_image_{idx + 1}.{file_ext}')
                 print('Downloading picture with name:', filename)
                 cls.download_one_image(img_url, filename)
-                time.sleep(3)
+                # time.sleep(6)
+                count_down_seconds(6)
                 pass
         pass
 
@@ -551,7 +580,8 @@ class BatchCrawler(CrawlerBase):
             # continue
             sub_response = requests.get(link_url, headers=self.headers_formed)
             self.extract_response_content(sub_response, self.result_abs_txt_file_name)
-            time.sleep(5)
+            # time.sleep(5)
+            count_down_seconds(6)
             if counter >= self.crawl_number:
                 break
                 pass
@@ -576,6 +606,14 @@ def task1():
     pass
 
 
+def task2():
+    # count_down_seconds(6)
+    ins = CrawlerBase('http')
+    ins.initiate_environment()
+    pass
+
+
 if __name__ == '__main__':
     # task1()
+    task2()
     pass

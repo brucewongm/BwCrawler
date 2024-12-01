@@ -1,4 +1,3 @@
-from time import sleep
 from PIL import Image
 from io import BytesIO
 from CrawlerBase import *
@@ -6,6 +5,15 @@ from CrawlerBaseExclusion import *
 
 exclusion = """https://newsukraine.rbc.ua/
 ua https://www.rbc.ua/
+https://newsukraine.rbc.ua/about.shtml
+https://newsukraine.rbc.ua/termsofuse.shtml
+https://newsukraine.rbc.ua/legacy.shtml
+https://newsukraine.rbc.ua/static/principles/index.html
+https://newsukraine.rbc.ua/privacypolicy.shtml
+https://newsukraine.rbc.ua/contacts.shtml
+https://newsukraine.rbc.ua/becomeauthor.shtml
+https://newsukraine.rbc.ua/static/principles/index.html
+https://newsukraine.rbc.ua/static/command/index.html
 x https://x.com/NewsUkraineRBC
 en javascript:;
 https://whatsapp.com/channel/0029VaVYmRP0rGiPdNM12L2g
@@ -170,6 +178,11 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
         print('requesting link:', link_url)
         response = requests.get(link_url, headers=self.headers_formed)
         # 检查请求是否成功
+        try:
+            print("response.status_code:", response.status_code)
+            pass
+        except:
+            pass
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
             # check date
@@ -204,8 +217,9 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
             pass
         else:
             print(f"Error: {response.status_code}")
+            crawl_result = False
             pass
-        dprint('notice,crawled the page \n{}\n successfully!'.format(link_url))
+        dprint('notice,crawled the page \n{}\nsuccessfully!'.format(link_url))
         return crawl_result
 
     def loop_crawl_main_page(self):
@@ -219,7 +233,8 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
             counter += 1
             print('\ncrawling main page number {}/{}'.format(str(counter), str(self.crawl_number)))
             self.crawl_one_url_content(link_text, link_url, self.result_abs_txt_file_name)
-            time.sleep(5)
+            # time.sleep(6)
+            count_down_seconds(6)
             if counter >= self.crawl_number:
                 break
                 pass
@@ -235,18 +250,38 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
             pass
         counter = 1
         for link_text, link_url in self.link_text_link_url_tuple_list:
+            if link_url in self.finished_url_list:
+                print('{}\nis already in finished url list.'.format(link_url))
+                counter += 1
+                print('The next page sequence number will be {}'.format(str(counter)))
+                continue
+            if counter >= self.crawl_number:
+                print('Target crawl number reached!')
+                break
+                pass
             print('\ncrawling news page link number {}/{}'.format(str(counter), str(self.crawl_number)))
             crawl_today_successfully = self.crawl_one_url_content(link_text, link_url, self.result_abs_txt_file_name)
-            time.sleep(5)
+            # time.sleep(6)
+            count_down_seconds(6)
             if not crawl_today_successfully:
                 continue
             # WebpagePictureDownloader.download_webpage_pictures(link_url, self.picture_download_directory)
-            WebpagePictureDownloader.download_webpage_pictures_of_the_size(link_url, save_folder=self.picture_download_directory)
+            print('Starting crawling pictures...')
+            WebpagePictureDownloader.download_webpage_pictures_of_the_size(link_url,
+                                                                           save_folder=self.picture_download_directory)
+            pass
+            self.finished_url_list.append(link_url)
+            finished_urls_text = '\n'.join(self.finished_url_list)
+            with open(self.finished_target_url_log_file, mode='w+', encoding='utf-8') as f:
+                f.write(finished_urls_text)
+                f.flush()
             if counter >= self.crawl_number:
+                print('Target crawl number reached!')
                 break
                 pass
             counter += 1
-            time.sleep(5)
+            # time.sleep(6)
+            count_down_seconds(6)
             pass
         pass
 
@@ -308,7 +343,8 @@ def task2():
         else:
             print('图片下载失败')
         pass
-        sleep(3)
+        # sleep(3)
+        count_down_seconds(3)
         pass
     pass
 
