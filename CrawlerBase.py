@@ -273,9 +273,17 @@ class CrawlerBase(object):
             pass
         # log file
         self.finished_target_url_log_file = os.path.join(self.result_directory, 'finished_target_url.txt')
-        file_object = open(self.finished_target_url_log_file, 'r+', encoding='utf-8')
-        url_lines = file_object.readlines()
-        file_object.close()
+        if not os.path.exists(self.finished_target_url_log_file):
+            # 文件不存在，创建文件
+            with open(self.finished_target_url_log_file, 'w') as file:
+                file.write('')
+                pass
+            pass
+        # 获取文件内容
+        with open(self.finished_target_url_log_file, 'r+', encoding='utf-8') as file_object:
+            url_lines = file_object.readlines()
+            file_object.close()
+            pass
         self.finished_url_list = [_.strip() for _ in url_lines]
         print('Finished urls:')
         pprint(self.finished_url_list)

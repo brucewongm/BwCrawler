@@ -228,14 +228,14 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
         with open(self.result_abs_txt_file_name, 'w') as file:
             file.write('')
             pass
-        counter = 0
+        loop_counter = 0
         for link_text, link_url in link_text_link_url_tuple_list:
-            counter += 1
-            print('\ncrawling main page number {}/{}'.format(str(counter), str(self.crawl_number)))
+            loop_counter += 1
+            print('\ncrawling main page number {}/{}'.format(str(loop_counter), str(self.crawl_number)))
             self.crawl_one_url_content(link_text, link_url, self.result_abs_txt_file_name)
             # time.sleep(6)
             count_down_seconds(6)
-            if counter >= self.crawl_number:
+            if loop_counter >= self.crawl_number:
                 break
                 pass
             pass
@@ -248,17 +248,17 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
         with open(self.result_abs_txt_file_name, 'w') as file:
             file.write('\ntitle:\n')
             pass
-        counter = 1
+        counter = 0
         for link_text, link_url in self.link_text_link_url_tuple_list:
+            counter += 1
+            print('\nThis page sequence number is {}'.format(str(counter)))
             if link_url in self.finished_url_list:
                 print('{}\nis already in finished url list.'.format(link_url))
-                counter += 1
-                print('The next page sequence number will be {}'.format(str(counter)))
+                if counter >= self.crawl_number:
+                    print('Target crawl number reached!')
+                    break
+                    pass
                 continue
-            if counter >= self.crawl_number:
-                print('Target crawl number reached!')
-                break
-                pass
             print('\ncrawling news page link number {}/{}'.format(str(counter), str(self.crawl_number)))
             crawl_today_successfully = self.crawl_one_url_content(link_text, link_url, self.result_abs_txt_file_name)
             # time.sleep(6)
@@ -279,7 +279,6 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
                 print('Target crawl number reached!')
                 break
                 pass
-            counter += 1
             # time.sleep(6)
             count_down_seconds(6)
             pass
