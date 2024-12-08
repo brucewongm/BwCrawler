@@ -50,6 +50,7 @@ Middle East conflict https://newsukraine.rbc.ua/tag/israel
 President Zelenskyy https://newsukraine.rbc.ua/tag/volodymyr-zelenskyy
 Follow us on X. Get the latest news https://x.com/NewsUkraineRBC
 """
+news_ukraine_keyword = "https://newsukraine.rbc.ua/news"
 OPEN = 1
 CLOSED = 0
 
@@ -146,10 +147,12 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
                 # dprint(clean_text)
                 # dprint('<'*100)
                 if gotten_link in exclusion:
-                    pass
+                    continue
+                elif news_ukraine_keyword not in gotten_link:
+                    continue
                 else:
-                    urls_collection.append((clean_text, gotten_link))
                     pass
+                urls_collection.append((clean_text, gotten_link))
                 pass
 
             pass
@@ -157,7 +160,9 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
             print(f"Error: {response.status_code}")
             pass
         pass
-        # pprint(urls_collection)
+        print('urls_collection:')
+        pprint(urls_collection)
+        exit(0)
         return urls_collection
 
     def record_available(self):
