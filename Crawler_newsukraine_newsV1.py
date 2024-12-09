@@ -119,6 +119,7 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
                     pass
                 else:
                     urls_collection.append((link.get_text().strip(), gotten_link))
+                    self.logger.log(link.get_text().strip()+' '+ gotten_link+'\n')
                     pass
                 pass
 
@@ -153,6 +154,7 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
                 else:
                     pass
                 urls_collection.append((clean_text, gotten_link))
+
                 pass
 
             pass
@@ -162,7 +164,16 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
         pass
         print('urls_collection:')
         pprint(urls_collection)
-        exit(0)
+        while True:
+            cmd = input("verify the crawled urls ,go on crawling or not ?:")
+            if not cmd:
+                continue
+            elif cmd.lower()=='y':
+                break
+            elif cmd.lower()=='n':
+                exit(0)
+                pass
+            pass
         return urls_collection
 
     def record_available(self):

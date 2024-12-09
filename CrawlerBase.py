@@ -1,6 +1,8 @@
 import datetime
+import logging
 import os
 import re
+from logging.handlers import RotatingFileHandler
 from pprint import pprint
 
 import requests
@@ -15,6 +17,64 @@ from fake_useragent import UserAgent
 from CrawlerBaseExclusion import exclusion
 
 DebugSwitch = 1
+
+
+def set_logger(logger_obj, logger_file_name_with_no_suffix,
+               logger_file_directory=None, time_in_filename=True,
+               rotating_file_handler=True):
+    """
+    :param logger_obj:logging.getLogger(log_name)
+    :param logger_file_name_with_no_suffix:
+    :param logger_file_directory:
+    :param time_in_filename:
+    :param rotating_file_handler:
+    :return:
+    """
+    """ 设置循环日志，日志文件大小超过10M时，将生成备份日志，最多保留30个日志文件"""
+    if not logger_obj:
+        log_name = 'temp' + moment()
+        logger_obj = logging.getLogger(log_name)
+        pass
+    dprint('entered logger_initialization')
+    # log文件名称
+    _file_name = logger_file_name_with_no_suffix + '.log'
+    if time_in_filename:
+        # 如果log文件名需要加时间
+        _file_name = logger_file_name_with_no_suffix + '-' + moment() + '.log'
+    # 文件所在目录
+    _log_file_directory = logger_file_directory
+    if not logger_file_directory:
+        _log_file_directory = os.path.join(os.getcwd(), 'log')
+    # create log directory and file
+    if not os.path.exists(_log_file_directory):
+        os.mkdir(_log_file_directory)
+    # log文件绝对路径
+    _log_file_abspath = os.path.join(_log_file_directory, _file_name)
+    # set getLogger object
+    '''设置getLogger的默认级别，添加的handler如果没有单独设置级别
+        （如下面的FileHandler，单独进行了设置），将默认使用该级别'''
+    logger_obj.setLevel(logging.DEBUG)
+    logger_obj.propagate = False
+    # create Formatter object and bind to FileHandler object
+    # formatter = logging.Formatter(
+    #     ("%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s"))
+    formatter = logging.Formatter("%(asctime)s - : %(message)s")
+    #
+    '''bind file handler'''
+    # create FileHandler object and bind to getLogger object
+    if rotating_file_handler:
+        file_handler = RotatingFileHandler(_log_file_abspath,
+                                           mode='a', maxBytes=10_000_000,
+                                           backupCount=30)
+    else:
+        file_handler = logging.FileHandler(_log_file_abspath, mode='a')
+    pass
+    # level:debug,info,warning,error,critical
+    file_handler.setLevel(logging.DEBUG)
+    # setFormatter
+    file_handler.setFormatter(formatter)
+    logger_obj.addHandler(file_handler)
+    pass
 
 
 def download_image1(url, filename):
@@ -245,6 +305,9 @@ class CrawlerBase(object):
             pass
         self.relative_word_file_name = self.relative_txt_file_name.split('.')[0] + '.docx'
         #
+        self.log_directory = None
+        self.logger = logging.getLogger('CrawlerBase')
+        #
         self.current_directory = os.getcwd()
         self.result_directory = None
         self.picture_download_directory = None
@@ -259,6 +322,8 @@ class CrawlerBase(object):
 
     def initiate_environment(self):
         # 设置文件路径
+        self.log_directory = os.path.join(self.current_directory, 'log')
+        set_logger(self.logger, moment(), self.log_directory)
         # parent_folder = os.path.dirname(self.current_directory)
         today = time.strftime("%Y-%m-%d", time.localtime())
         self.result_directory = os.path.join(self.current_directory, 'results{}'.format(today))
