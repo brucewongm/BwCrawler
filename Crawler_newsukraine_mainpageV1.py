@@ -55,7 +55,7 @@ OPEN = 1
 CLOSED = 0
 
 
-class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
+class CrawlerNewsUkraineRbcUaMain(CrawlerBase):
     def __init__(self, target_url, result_txt_file_name=None, crawl_number=15):
         super().__init__(target_url, result_txt_file_name)
         self.target_url = target_url
@@ -87,9 +87,18 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
         self.crawl_only_today = condition
         pass
 
-    def crawl_news_page_urls(self):
+    def crawl_main_page_urls(self):
         urls_collection = []
-        prefix_reg = r'(\w+\s+\d+\D+\d+\D+\d+\:\d+\s+)(?=\w+)'
+        # 设置请求头，模拟正常用户的浏览器请求
+        # self.headers_formed = {
+        #     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36',
+        #     'Accept-Language': 'en-US,en;q=0.5',
+        #     'Accept-Encoding': 'gzip, deflate, br',
+        #     'Connection': 'keep-alive',
+        #     'Upgrade-Insecure-Requests': '1',
+        #     'DNT': '1',  # Do Not Track 请求头
+        #     'Referer': self.target_url,  # 引用页，有助于避免被识别为爬虫（有时）
+        # }
         response = requests.get(self.target_url, headers=self.headers_formed)
         # 检查请求是否成功
         if response.status_code == 200:
@@ -98,20 +107,14 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
             links = soup.find_all('a')
             for link in links:
                 # 获取链接的文本和URL
-                gotten_text = link.get_text().strip()
                 gotten_link = link.get('href')
-                clean_text = re.sub(prefix_reg, '', gotten_text, re.I | re.M)
-                # dprint('>'*100)
-                # dprint(clean_text)
-                # dprint('<'*100)
+                # print(link.get_text(), link.get('href'))
                 if gotten_link in exclusion:
-                    continue
-                elif news_ukraine_keyword not in gotten_link:
-                    continue
-                else:
                     pass
-                urls_collection.append((clean_text, gotten_link))
-
+                else:
+                    urls_collection.append((link.get_text().strip(), gotten_link))
+                    self.logger.log(link.get_text().strip() + ' ' + gotten_link + '\n')
+                    pass
                 pass
 
             pass
@@ -119,20 +122,16 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
             print(f"Error: {response.status_code}")
             pass
         pass
-        print('urls_collection:')
-        pprint(urls_collection)
-        print('the number of crawled url links is {}'.format(str(len(urls_collection))))
-        while True:
-            cmd = input("verify the crawled urls ,are you sure to go on crawling ?(Y/N):")
-            if not cmd:
-                continue
-            elif cmd.lower() == 'y':
-                break
-            elif cmd.lower() == 'n':
-                exit(0)
-                pass
-            pass
         return urls_collection
+
+    def record_available(self):
+        if self.front_door_state == CLOSED and self.back_door_state == OPEN:
+            result = True
+            pass
+        else:
+            result = False
+            pass
+        return result
 
     def crawl_one_url_content(self, link_text, link_url, filename):
         crawl_result = True
@@ -187,53 +186,22 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
         dprint('notice,crawled the page \n{}\nsuccessfully!'.format(link_url))
         return crawl_result
 
-    def loop_crawl_news_page(self):
-        self.link_text_link_url_tuple_list = self.crawl_news_page_urls()
-        # link_text_link_url_tuple_list = self.extract_response_title_link()
+    def loop_crawl_main_page(self):
+        link_text_link_url_tuple_list = self.crawl_main_page_urls()
         #
         with open(self.result_abs_txt_file_name, 'w') as file:
-            file.write('\ntitle:\n')
+            file.write('')
             pass
-        loop_counter = 1
-        for link_text, link_url in self.link_text_link_url_tuple_list:
-            print('\nThis page sequence number is {}'.format(str(loop_counter)))
-            if link_url in self.finished_url_list:
-                print('{}\nis already in finished url list.'.format(link_url))
-                self.logger.debug('found ({}) in finished record.'.format(link_url))
-                loop_counter += 1
-                self.logger.debug('counter add 1 to be {}.'.format(str(loop_counter)))
-                if loop_counter > self.crawl_number:
-                    print('Target crawl number reached!')
-                    break
-                    pass
-                continue
-            print('\ncrawling news page link number {}/{}'.format(str(loop_counter), str(self.crawl_number)))
-            self.logger.debug('start crawling ({}).'.format(link_url))
-            crawl_this_successfully = self.crawl_one_url_content(link_text, link_url, self.result_abs_txt_file_name)
-            self.logger.debug('this crawl result:{}'.format(str(crawl_this_successfully)))
-            count_down_seconds(6)
-            if not crawl_this_successfully:
-                continue
-            # WebpagePictureDownloader.download_webpage_pictures(link_url, self.picture_download_directory)
-            print('Starting crawling pictures...')
-            WebpagePictureDownloader.download_webpage_pictures_of_the_size(link_url,
-                                                                           save_folder=self.picture_download_directory)
-            pass
-            self.finished_url_list.append(link_url)
-            finished_urls_text = '\n'.join(self.finished_url_list)
-            with open(self.finished_target_url_log_file, mode='w+', encoding='utf-8') as f:
-                f.write(finished_urls_text)
-                f.flush()
-                pass
-            self.logger.debug('crawl page ({}) and write record successfully.'.format(link_url))
+        loop_counter = 0
+        for link_text, link_url in link_text_link_url_tuple_list:
             loop_counter += 1
-            self.logger.debug('counter add 1 to be {}.'.format(str(loop_counter)))
-            if loop_counter > self.crawl_number:
-                print('Target crawl number reached!')
-                break
-                pass
+            print('\ncrawling main page number {}/{}'.format(str(loop_counter), str(self.crawl_number)))
+            self.crawl_one_url_content(link_text, link_url, self.result_abs_txt_file_name)
             # time.sleep(6)
             count_down_seconds(6)
+            if loop_counter >= self.crawl_number:
+                break
+                pass
             pass
         pass
 
@@ -252,7 +220,7 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
 
     def run(self):
         self.initiate_environment()
-        self.loop_crawl_news_page()
+        self.loop_crawl_main_page()
         self.txt2word()
         os.system('start {}'.format(self.result_directory))
         os.system('start {}'.format(self.result_abs_word_file_name))
@@ -265,14 +233,13 @@ pass
 
 
 def task1():
-    target_url = 'https://newsukraine.rbc.ua/news'
+    target_url = 'https://newsukraine.rbc.ua'
     referred_url = 'https://newsukraine.rbc.ua/'
     crawl_number = 20
-    ins = CrawlerNewsUkraineRbcUaNewsPage(target_url, None, crawl_number)
+    ins = CrawlerNewsUkraineRbcUaMain(target_url, None, crawl_number)
     ins.set_referred_url(referred_url)
     # ins.set_crawl_today(True)
     ins.run()
-    input('finished crawling,input any string to exit:')
     pass
 
 
@@ -305,4 +272,5 @@ def task2():
 pass
 if __name__ == '__main__':
     task1()
+    # task2()
 pass

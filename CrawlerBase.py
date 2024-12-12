@@ -333,9 +333,11 @@ class CrawlerBase(object):
         if not os.path.exists(self.result_directory):
             os.makedirs(self.result_directory)
             pass
+        self.logger.debug('initiate text result folder successfully.')
         if not os.path.exists(self.picture_download_directory):
             os.makedirs(self.picture_download_directory)
             pass
+        self.logger.debug('initiate picture result folder successfully.')
         # log file
         self.finished_target_url_log_file = os.path.join(self.result_directory, 'finished_target_url.txt')
         if not os.path.exists(self.finished_target_url_log_file):
@@ -344,6 +346,7 @@ class CrawlerBase(object):
                 file.write('')
                 pass
             pass
+        self.logger.debug('initiate finised text file successfully.')
         # 获取文件内容
         with open(self.finished_target_url_log_file, 'r+', encoding='utf-8') as file_object:
             url_lines = file_object.readlines()
@@ -352,6 +355,7 @@ class CrawlerBase(object):
         self.finished_url_list = [_.strip() for _ in url_lines]
         print('Finished urls:')
         pprint(self.finished_url_list)
+        print('the number of crawled url links is {}'.format(str(len(self.finished_url_list))))
         # 设置请求头，模拟正常用户的浏览器请求
         ua = UserAgent()
         try:
