@@ -165,7 +165,7 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
         print('urls_collection:')
         pprint(urls_collection)
         while True:
-            cmd = input("verify the crawled urls ,go on crawling or not ?:")
+            cmd = input("verify the crawled urls ,are you sure to go on crawling ?(Y/N):")
             if not cmd:
                 continue
             elif cmd.lower()=='y':
