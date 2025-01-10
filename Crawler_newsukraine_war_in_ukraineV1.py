@@ -235,7 +235,9 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
             time.sleep(5)
             if not crawl_today_successfully:
                 continue
-            WebpagePictureDownloader.download_webpage_pictures(link_url, self.picture_download_directory)
+            # WebpagePictureDownloader.download_webpage_pictures(link_url, self.picture_download_directory)
+            WebpagePictureDownloader.download_webpage_pictures_of_the_size(link_url, '650x410',
+                                                                           self.picture_download_directory)
             if counter >= self.crawl_number:
                 break
                 pass
