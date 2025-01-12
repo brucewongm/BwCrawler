@@ -121,7 +121,7 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
         pass
         print('urls_collection:')
         pprint(urls_collection)
-        print('the number of crawled url links is {}'.format(str(len(urls_collection))))
+        print('the number of crawled target url links is {}'.format(str(len(urls_collection))))
         while True:
             cmd = input("verify the crawled urls ,are you sure to go on crawling ?(Y/N):")
             if not cmd:

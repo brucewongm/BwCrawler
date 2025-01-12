@@ -355,7 +355,7 @@ class CrawlerBase(object):
         self.finished_url_list = [_.strip() for _ in url_lines]
         print('Finished urls:')
         pprint(self.finished_url_list)
-        print('the number of crawled url links is {}'.format(str(len(self.finished_url_list))))
+        print('the number of finished url links is {}'.format(str(len(self.finished_url_list))))
         # 设置请求头，模拟正常用户的浏览器请求
         ua = UserAgent()
         try:
