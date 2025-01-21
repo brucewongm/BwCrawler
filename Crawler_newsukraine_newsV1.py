@@ -53,6 +53,8 @@ Follow us on X. Get the latest news https://x.com/NewsUkraineRBC
 news_ukraine_keyword = "https://newsukraine.rbc.ua/news"
 OPEN = 1
 CLOSED = 0
+TIME_INTERVAL_OF_WEBPAGES = 6
+TIME_INTERVAL_OF_PICTURES = 3
 
 
 class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
@@ -211,7 +213,7 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
             self.logger.debug('start crawling ({}).'.format(link_url))
             crawl_this_successfully = self.crawl_one_url_content(link_text, link_url, self.result_abs_txt_file_name)
             self.logger.debug('this crawl result:{}'.format(str(crawl_this_successfully)))
-            count_down_seconds(6)
+            count_down_seconds(TIME_INTERVAL_OF_WEBPAGES)
             if not crawl_this_successfully:
                 continue
             # WebpagePictureDownloader.download_webpage_pictures(link_url, self.picture_download_directory)
@@ -232,8 +234,7 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
                 print('Target crawl number reached!')
                 break
                 pass
-            # time.sleep(6)
-            count_down_seconds(6)
+            count_down_seconds(TIME_INTERVAL_OF_WEBPAGES)
             pass
         pass
 
@@ -267,7 +268,7 @@ pass
 def task1():
     target_url = 'https://newsukraine.rbc.ua/news'
     referred_url = 'https://newsukraine.rbc.ua/'
-    crawl_number = 25
+    crawl_number = 30
     ins = CrawlerNewsUkraineRbcUaNewsPage(target_url, None, crawl_number)
     ins.set_referred_url(referred_url)
     # ins.set_crawl_today(True)
@@ -297,7 +298,7 @@ def task2():
             print('图片下载失败')
         pass
         # sleep(3)
-        count_down_seconds(3)
+        count_down_seconds(TIME_INTERVAL_OF_PICTURES)
         pass
     pass
 
