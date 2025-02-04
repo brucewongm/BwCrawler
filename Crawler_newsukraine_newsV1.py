@@ -1,3 +1,5 @@
+from http.cookiejar import reach
+
 from PIL import Image
 from io import BytesIO
 from CrawlerBase import *
@@ -89,7 +91,7 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
         self.crawl_only_today = condition
         pass
 
-    def crawl_news_page_urls(self):
+    def crawl_news_page_urls_old(self):
         urls_collection = []
         prefix_reg = r'(\w+\s+\d+\D+\d+\D+\d+\:\d+\s+)(?=\w+)'
         response = requests.get(self.target_url, headers=self.headers_formed)
@@ -131,8 +133,65 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
             elif cmd.lower() == 'y':
                 break
             elif cmd.lower() == 'n':
-                exit(0)
+                continue
+                # exit(0)
                 pass
+            pass
+        return urls_collection
+
+    def crawl_news_page_urls(self):
+        prefix_reg = r'(\w+\s+\d+\D+\d+\D+\d+\:\d+\s+)(?=\w+)'
+        reach_flag = True
+        urls_collection = []
+        while reach_flag:
+            urls_collection = []
+            response = requests.get(self.target_url, headers=self.headers_formed)
+            # 检查请求是否成功
+            if response.status_code == 200:
+                # 使用BeautifulSoup解析网页内容
+                soup = BeautifulSoup(response.text, 'html.parser')
+                links = soup.find_all('a')
+                for link in links:
+                    # 获取链接的文本和URL
+                    gotten_text = link.get_text().strip()
+                    gotten_link = link.get('href')
+                    clean_text = re.sub(prefix_reg, '', gotten_text, re.I | re.M)
+                    # dprint('>'*100)
+                    # dprint(clean_text)
+                    # dprint('<'*100)
+                    if gotten_link in exclusion:
+                        continue
+                    elif news_ukraine_keyword not in gotten_link:
+                        continue
+                    else:
+                        pass
+                    urls_collection.append((clean_text, gotten_link))
+
+                    pass
+
+                pass
+            else:
+                print(f"Error: {response.status_code}")
+                pass
+            pass
+            print('urls_collection:')
+            pprint(urls_collection)
+            print('the number of crawled url links is {}'.format(str(len(urls_collection))))
+            while True:
+                cmd = input("verify the number crawled urls ,are you sure to go on crawling ?(Y/N):")
+                if cmd.lower() == 'y':
+                    reach_flag= False
+                    break
+                    pass
+                elif cmd.lower() == 'n':
+                    break
+                    pass
+                else:
+                    continue
+                    pass
+                pass
+            response = None
+            pause(6)
             pass
         return urls_collection
 
