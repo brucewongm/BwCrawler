@@ -140,6 +140,7 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
         return urls_collection
 
     def crawl_news_page_urls(self):
+        print("Crawling news page urls...")
         prefix_reg = r'(\w+\s+\d+\D+\d+\D+\d+\:\d+\s+)(?=\w+)'
         reach_flag = True
         urls_collection = []
