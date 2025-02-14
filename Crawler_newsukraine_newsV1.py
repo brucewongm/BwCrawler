@@ -125,7 +125,8 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
         pass
         print('urls_collection:')
         pprint(urls_collection)
-        print('the number of crawled url links is {}'.format(str(len(urls_collection))))
+        crawled_url_number = len(urls_collection)
+        print('the number of crawled url links is {}'.format(str(crawled_url_number)))
         while True:
             cmd = input("verify the crawled urls ,are you sure to go on crawling ?(Y/N):")
             if not cmd:
@@ -176,21 +177,25 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
                 pass
             pass
             print('urls_collection:')
-            pprint(urls_collection)
-            print('the number of crawled url links is {}'.format(str(len(urls_collection))))
-            while True:
-                cmd = input("verify the number crawled urls ,are you sure to go on crawling ?(Y/N):")
-                if cmd.lower() == 'y':
-                    reach_flag= False
-                    break
-                    pass
-                elif cmd.lower() == 'n':
-                    break
-                    pass
-                else:
-                    continue
-                    pass
-                pass
+            # pprint(urls_collection)
+            # print('the number of crawled url links is {}'.format(str(len(urls_collection))))
+            crawled_url_number = len(urls_collection)
+            print('the number of crawled url links is {}'.format(str(crawled_url_number)))
+            # while True:
+            #     cmd = input("verify the number crawled urls ,are you sure to go on crawling ?(Y/N):")
+            #     if cmd.lower() == 'y':
+            #         reach_flag = False
+            #         break
+            #         pass
+            #     elif cmd.lower() == 'n':
+            #         break
+            #         pass
+            #     else:
+            #         continue
+            #         pass
+            #     pass
+            if crawled_url_number >= 30:
+                break
             response = None
             pause(6)
             pass
