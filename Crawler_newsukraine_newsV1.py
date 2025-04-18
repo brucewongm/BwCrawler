@@ -1,4 +1,4 @@
-from http.cookiejar import reach
+# from http.cookiejar import reach
 
 from PIL import Image
 from io import BytesIO

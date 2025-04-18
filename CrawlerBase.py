@@ -301,7 +301,7 @@ class CrawlerBase(object):
             self.relative_txt_file_name = result_txt_file_name
             pass
         else:
-            self.relative_txt_file_name = 'craw_result{}_english.txt'.format(moment())
+            self.relative_txt_file_name = 'crawl_result{}_english.txt'.format(moment())
             pass
         self.relative_word_file_name = self.relative_txt_file_name.split('.')[0] + '.docx'
         #
