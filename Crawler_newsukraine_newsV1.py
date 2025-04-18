@@ -233,11 +233,13 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
                 file.flush()
                 for element in soup.find_all(['h1', 'h2', 'h3', 'p', 'ul', 'li']):
                     if element.name in ['h1', 'h2', 'h3']:
+                        file.write('\n')
                         file.write(element.text.strip())
                         file.write('\n')
                         file.flush()
                         pass
                     elif element.name == 'p':
+                        file.write('\n')
                         file.write(element.text.strip())
                         file.write('\n')
                         file.flush()
