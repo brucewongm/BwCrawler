@@ -2,8 +2,11 @@
 
 from PIL import Image
 from io import BytesIO
+from openai import OpenAI
+
 from CrawlerBase import *
 from CrawlerBaseExclusion import *
+from MyAPIKey import MY_API_KEY
 
 exclusion = """https://newsukraine.rbc.ua/
 ua https://www.rbc.ua/
@@ -58,6 +61,18 @@ CLOSED = 0
 TIME_INTERVAL_OF_WEBPAGES = 6
 TIME_INTERVAL_OF_PICTURES = 3
 
+
+def get_deepseek_response_message_content(content):
+    client = OpenAI(api_key=MY_API_KEY, base_url="https://api.deepseek.com")
+    response = client.chat.completions.create(
+        model="deepseek-chat",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant and capable translator"},
+            {"role": "user", "content": content},
+        ],
+        stream=False)
+    target = response.choices[0].message.content
+    return target
 
 class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
     def __init__(self, target_url, result_txt_file_name=None, crawl_number=15):
@@ -318,12 +333,94 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
         doc.save(self.result_abs_word_file_name)
         pass
 
+    def get_image_filenames(self):
+        file_list = []
+        # 检查路径是否存在
+        if not os.path.exists(self.picture_download_directory):
+            raise FileNotFoundError(f"路径不存在: {self.picture_download_directory}")
+
+        # 检查是否是目录
+        if not os.path.isdir(self.picture_download_directory):
+            raise NotADirectoryError(f"提供的路径不是目录: {self.picture_download_directory}")
+
+        # 遍历目录获取所有文件
+        for entry in os.listdir(self.picture_download_directory):
+            full_path = os.path.join(self.picture_download_directory, entry)
+            if os.path.isfile(full_path):  # 只添加文件，不包含目录
+                file_list.append(entry)
+        return file_list
+
+    def get_image_file_name_keyword(self, file_name):
+        """
+        :param file_name: 这个文件明会带有下划线和横线已经数字后缀，需要将这些字符进行清除
+        :return:
+        """
+        file_name_key_word_list = re.split(r'-\d+_', file_name)
+        if file_name_key_word_list:
+            target = file_name_key_word_list[0]
+            target = ' '.join(target.split('-'))
+            return target
+        return None
+
+    def process_result(self):
+        output_path = os.path.join(self.result_directory, 'translated' + moment() + '.docx')
+        print('target word path:', output_path)
+        # x = input(":")
+        target_image_list = self.get_image_filenames()
+        #
+        content = open(self.result_abs_txt_file_name, 'r+', encoding='utf-8').read()
+        content = re.sub(r'\s+title:\s+title:\s+', '', content)
+        content = content.strip()
+        # print(content)
+        content_list = content.split('title:')
+        # print(content_list)
+        print('content length:', len(content_list))
+        doc = Document()
+        paragraph_count = 0
+        for paragraph in content_list:
+            paragraph_count += 1
+            print('current paragraph index:', paragraph_count)
+            # add text
+            prompt = ('translate the following content into Chinese;'
+                      'for those names in parentheses,delete the names and the parentheses;'
+                      'in order to make the translation in a good-looking format,delete some certain specific symbols;'
+                      'the content is as follows:')
+            question = prompt + paragraph
+            print('question:\n', question)
+            print('current paragraph index:', paragraph_count)
+            translated_paragraph = get_deepseek_response_message_content(question)
+            print('deepseek answer:\n', translated_paragraph)
+            doc.add_paragraph(translated_paragraph)
+            # add picture
+            for image_file_name in target_image_list:
+                fixed_file_name = self.get_image_file_name_keyword(image_file_name)
+                if not fixed_file_name:
+                    continue
+                if fixed_file_name in paragraph:
+                    # 将图片英文名加入段落
+                    doc.add_paragraph(image_file_name)
+                    #
+                    print('found matched image:', image_file_name)
+                    full_image_path = os.path.join(self.picture_download_directory, image_file_name)
+                    last_paragraph = doc.add_paragraph()
+                    run = last_paragraph.add_run()
+                    run.add_picture(full_image_path)
+                    break
+                    pass
+                pass
+
+            pass
+        # 保存文档
+        doc.save(output_path)
+        return
+
     def run(self):
         self.initiate_environment()
         self.loop_crawl_news_page()
         self.txt2word()
-        os.system('start {}'.format(self.result_directory))
-        os.system('start {}'.format(self.result_abs_word_file_name))
+        # os.system('start {}'.format(self.result_directory))
+        # os.system('start {}'.format(self.result_abs_word_file_name))
+        self.process_result()
         pass
 
     pass

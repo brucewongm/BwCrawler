@@ -10,7 +10,6 @@ from openai import OpenAI
 
 from MyAPIKey import MY_API_KEY
 
-client = OpenAI(api_key=MY_API_KEY, base_url="https://api.deepseek.com")
 
 
 def get_deepseek_response_message_content(content):
