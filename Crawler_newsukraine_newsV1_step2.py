@@ -2,6 +2,10 @@ import os
 import re
 from pprint import pprint
 
+from PyQt5.QtCore import fixed
+
+from CrawlerBase import moment
+from docx import Document
 from openai import OpenAI
 
 from MyAPIKey import MY_API_KEY
@@ -13,9 +17,8 @@ def get_deepseek_response_message_content(content):
     response = client.chat.completions.create(
         model="deepseek-chat",
         messages=[
-            {"role": "system", "content": content},
-            # {"role": "system", "content": "You are a helpful assistant"},
-            {"role": "user", "content": "Hello"},
+            {"role": "system", "content": "You are a helpful assistant and capable translator"},
+            {"role": "user", "content": content},
         ],
         stream=False)
     target = response.choices[0].message.content
@@ -83,6 +86,10 @@ def get_image_filenames():
 
 
 def get_image_file_name_keyword(file_name):
+    """
+    :param file_name: 这个文件明会带有下划线和横线已经数字后缀，需要将这些字符进行清除
+    :return:
+    """
     file_name_key_word_list = re.split(r'-\d+_', file_name)
     if file_name_key_word_list:
         target = file_name_key_word_list[0]
@@ -117,6 +124,10 @@ def process_result():
     target_folder = get_result_directory()
     target_txt = get_result_txt_file_full_name()
     target_image_folder = get_image_directory()
+    output_path = target_folder + get_result_directory() + 'translated' + moment() + '.docx'
+    print('target word path:', output_path)
+    target_image_list = get_image_filenames()
+    #
     content = open(target_txt, 'r+', encoding='utf-8').read()
     content = re.sub(r'\s+title:\s+title:\s+', '', content)
     content = content.strip()
@@ -124,18 +135,32 @@ def process_result():
     content_list = content.split('title:')
     # print(content_list)
     print('content length:', len(content_list))
+    doc = Document()
     for paragraph in content_list:
-        doc = Document()
-        last_paragraph = doc.add_paragraph()
-        run = last_paragraph.add_run()
-        run.add_picture(image_path, width=Inches(4))  # 设置图片宽度为4英寸
+        # add text
+        question = 'translate the following content into Chinese:' + paragraph
+        print('question:', question)
+        translated_paragraph = get_deepseek_response_message_content(question)
+        print('deepseek answer:', translated_paragraph)
+        doc.add_paragraph(translated_paragraph)
+        # add picture
+        for image_file_name in target_image_list:
+            print('this image file name:', image_file_name)
+            fixed_file_name = get_image_file_name_keyword(image_file_name)
+            if not fixed_file_name:
+                continue
+            if fixed_file_name in paragraph:
+                full_image_path = os.path.join(target_image_folder, image_file_name)
+                last_paragraph = doc.add_paragraph()
+                run = last_paragraph.add_run()
+                run.add_picture(full_image_path)
+                break
+                pass
+            pass
 
-        # 保存文档
-        if output_path is None:
-            output_path = doc_path
-        doc.save(output_path)
-        print(f"图片已成功插入到文档末尾，保存为: {output_path}")
         pass
+    # 保存文档
+    doc.save(output_path)
     return
 
 
