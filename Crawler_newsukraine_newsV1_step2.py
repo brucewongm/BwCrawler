@@ -42,6 +42,7 @@ def get_result_directory():
 
 def get_result_txt_file_full_name():
     result_directory = get_result_directory()
+    assert result_directory
     if result_directory:
         pattern = r'crawl_result\d{4}-\d{1,2}-\d{1,2}_\d{1,2}-\d{1,2}-\d{1,2}_english\.txt'
         for root, _, files in os.walk(result_directory):
@@ -123,9 +124,12 @@ def check2():
 def process_result():
     target_folder = get_result_directory()
     target_txt = get_result_txt_file_full_name()
+    assert target_txt
     target_image_folder = get_image_directory()
-    output_path = target_folder + get_result_directory() + 'translated' + moment() + '.docx'
+    assert target_image_folder
+    output_path = os.path.join(target_folder, 'translated' + moment() + '.docx')
     print('target word path:', output_path)
+    # x = input(":")
     target_image_list = get_image_filenames()
     #
     content = open(target_txt, 'r+', encoding='utf-8').read()
@@ -136,20 +140,29 @@ def process_result():
     # print(content_list)
     print('content length:', len(content_list))
     doc = Document()
+    paragraph_count = 0
     for paragraph in content_list:
+        paragraph_count += 1
+        print('current paragraph index:', paragraph_count)
         # add text
-        question = 'translate the following content into Chinese:' + paragraph
-        print('question:', question)
+        prompt = ('translate the following content into Chinese;'
+                  'for those names in parentheses,delete the names and the parentheses;'
+                  'in order to make the translation in a good-looking format,delete some certain specific symbols;'
+                  'the content is as follows:')
+        question = prompt + paragraph
+        print('question:\n', question)
         translated_paragraph = get_deepseek_response_message_content(question)
-        print('deepseek answer:', translated_paragraph)
+        print('deepseek answer:\n', translated_paragraph)
         doc.add_paragraph(translated_paragraph)
         # add picture
         for image_file_name in target_image_list:
-            print('this image file name:', image_file_name)
             fixed_file_name = get_image_file_name_keyword(image_file_name)
             if not fixed_file_name:
                 continue
             if fixed_file_name in paragraph:
+                # 将图片英文名加入段落
+                doc.add_paragraph(image_file_name)
+                print('found matched image:', image_file_name)
                 full_image_path = os.path.join(target_image_folder, image_file_name)
                 last_paragraph = doc.add_paragraph()
                 run = last_paragraph.add_run()
