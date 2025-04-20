@@ -385,7 +385,8 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
             # add text
             prompt = ('translate the following content into Chinese;'
                       'for those names in parentheses,delete the names and the parentheses;'
-                      'in order to make the translation in a good-looking format,delete some certain specific symbols;'
+                      'in order to make the translation in a good-looking format,delete some certain specific symbols,'
+                      'and remove any kind of extra explanation or postscript;'
                       'the content is as follows:')
             question = prompt + paragraph
             print('question:\n', question)
