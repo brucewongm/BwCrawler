@@ -74,6 +74,7 @@ def get_deepseek_response_message_content(content):
     target = response.choices[0].message.content
     return target
 
+
 class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
     def __init__(self, target_url, result_txt_file_name=None, crawl_number=15):
         super().__init__(target_url, result_txt_file_name)
@@ -363,8 +364,9 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
         return None
 
     def process_result(self):
-        output_path = os.path.join(self.result_directory, 'translated' + moment() + '.docx')
-        print('target word path:', output_path)
+        txt_file_output_path = os.path.join(self.result_directory, 'translated' + moment() + '.txt')
+        word_file_output_path = os.path.join(self.result_directory, 'translated' + moment() + '.docx')
+        print('target word path:', word_file_output_path)
         # x = input(":")
         target_image_list = self.get_image_filenames()
         #
@@ -390,6 +392,13 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
             print('current paragraph index:', paragraph_count)
             translated_paragraph = get_deepseek_response_message_content(question)
             print('deepseek answer:\n', translated_paragraph)
+            # write txt file
+            with open(txt_file_output_path, mode='w+', encoding='utf-8') as output_file:
+                output_file.write('\n')
+                output_file.write(translated_paragraph)
+                output_file.flush()
+                pass
+            # write word file
             doc.add_paragraph(translated_paragraph)
             # add picture
             for image_file_name in target_image_list:
@@ -411,7 +420,7 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
 
             pass
         # 保存文档
-        doc.save(output_path)
+        doc.save(word_file_output_path)
         return
 
     def run(self):
