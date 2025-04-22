@@ -62,7 +62,7 @@ TIME_INTERVAL_OF_WEBPAGES = 6
 TIME_INTERVAL_OF_PICTURES = 3
 
 
-def get_deepseek_response_message_content(content):
+def get_deepseek_translation(content, temperature=1.3):
     client = OpenAI(api_key=MY_API_KEY, base_url="https://api.deepseek.com")
     response = client.chat.completions.create(
         model="deepseek-chat",
@@ -70,6 +70,7 @@ def get_deepseek_response_message_content(content):
             {"role": "system", "content": "You are a helpful assistant and capable translator"},
             {"role": "user", "content": content},
         ],
+        temperature=temperature,
         stream=False)
     target = response.choices[0].message.content
     return target
@@ -391,7 +392,7 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
             question = prompt + paragraph
             print('question:\n', question)
             print('current paragraph index:', paragraph_count)
-            translated_paragraph = get_deepseek_response_message_content(question)
+            translated_paragraph = get_deepseek_translation(question)
             print('deepseek answer:\n', translated_paragraph)
             # write txt file
             with open(txt_file_output_path, mode='a+', encoding='utf-8') as output_file:
