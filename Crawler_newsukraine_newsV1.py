@@ -394,7 +394,7 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
             translated_paragraph = get_deepseek_response_message_content(question)
             print('deepseek answer:\n', translated_paragraph)
             # write txt file
-            with open(txt_file_output_path, mode='w+', encoding='utf-8') as output_file:
+            with open(txt_file_output_path, mode='a+', encoding='utf-8') as output_file:
                 output_file.write('\n')
                 output_file.write(translated_paragraph)
                 output_file.flush()
