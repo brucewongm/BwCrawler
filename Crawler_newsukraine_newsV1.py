@@ -77,10 +77,12 @@ def get_deepseek_translation(content, temperature=1.3):
 
 
 class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
-    def __init__(self, target_url, result_txt_file_name=None, crawl_number=15):
+    def __init__(self, target_url, result_txt_file_name=None, target_crawl_number=15):
         super().__init__(target_url, result_txt_file_name)
+        self.translation_word_file_output_path = None
+        self.translation_txt_file_output_path = None
         self.target_url = target_url
-        self.crawl_number = crawl_number
+        self.target_crawl_number = target_crawl_number
         if result_txt_file_name:
             self.result_txt_file_name = result_txt_file_name
             pass
@@ -196,8 +198,8 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
             print('urls_collection:')
             # pprint(urls_collection)
             # print('the number of crawled url links is {}'.format(str(len(urls_collection))))
-            crawled_url_number = len(urls_collection)
-            print('the number of crawled url links is {}'.format(str(crawled_url_number)))
+            news_page_crawled_url_number = len(urls_collection)
+            print('the number of crawled url links is {}'.format(str(news_page_crawled_url_number)))
             # while True:
             #     cmd = input("verify the number crawled urls ,are you sure to go on crawling ?(Y/N):")
             #     if cmd.lower() == 'y':
@@ -211,7 +213,7 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
             #         continue
             #         pass
             #     pass
-            if crawled_url_number >= 30:
+            if news_page_crawled_url_number >= self.target_crawl_number:
                 break
             response = None
             pause(6)
@@ -288,12 +290,12 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
                 self.logger.debug('found ({}) in finished record.'.format(link_url))
                 loop_counter += 1
                 self.logger.debug('counter add 1 to be {}.'.format(str(loop_counter)))
-                if loop_counter > self.crawl_number:
+                if loop_counter > self.target_crawl_number:
                     print('Target crawl number reached!')
                     break
                     pass
                 continue
-            print('\ncrawling news page link number {}/{}'.format(str(loop_counter), str(self.crawl_number)))
+            print('\ncrawling news page link number {}/{}'.format(str(loop_counter), str(self.target_crawl_number)))
             self.logger.debug('start crawling ({}).'.format(link_url))
             crawl_this_successfully = self.crawl_one_url_content(link_text, link_url, self.result_abs_txt_file_name)
             self.logger.debug('this crawl result:{}'.format(str(crawl_this_successfully)))
@@ -314,7 +316,7 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
             self.logger.debug('crawl page ({}) and write record successfully.'.format(link_url))
             loop_counter += 1
             self.logger.debug('counter add 1 to be {}.'.format(str(loop_counter)))
-            if loop_counter > self.crawl_number:
+            if loop_counter > self.target_crawl_number:
                 print('Target crawl number reached!')
                 break
                 pass
@@ -365,9 +367,9 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
         return None
 
     def process_result(self):
-        txt_file_output_path = os.path.join(self.result_directory, 'translated' + moment() + '.txt')
-        word_file_output_path = os.path.join(self.result_directory, 'translated' + moment() + '.docx')
-        print('target word path:', word_file_output_path)
+        self.translation_txt_file_output_path = os.path.join(self.result_directory, 'translated' + moment() + '.txt')
+        self.translation_word_file_output_path = os.path.join(self.result_directory, 'translated' + moment() + '.docx')
+        print('target word path:', self.translation_word_file_output_path)
         # x = input(":")
         target_image_list = self.get_image_filenames()
         #
@@ -384,18 +386,32 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
             paragraph_count += 1
             print('current paragraph index:', paragraph_count)
             # add text
-            prompt = ('translate the following content into Chinese;'
-                      'for those names in parentheses,delete the names and the parentheses;'
-                      'in order to make the translation in a good-looking format,delete some certain specific symbols,'
-                      'and remove any kind of extra explanation or postscript;'
-                      'the content is as follows:')
+            prompt = """
+            Translation Task Guidelines
+            Objective:Translate the provided article into Chinese while strictly applying these rules:
+            Command:
+            If the user's input does not mention economy/politics or military, respond exactly with a single space character (" ").
+            Never add explanations, postscripts, or any other text.
+            Only respond normally if politics/military is directly discussed.
+            Reference Handling:
+            Omit all sentences containing "further details", "more details" (especially in final paragraphs) that link to external websites.
+            Text Formatting:
+            Remove all parenthetical content (names + parentheses)
+            Delete the following symbols: # * 
+            Exception: Retain if symbols are semantically crucial (e.g., * for emphasis in linguistics)
+            Narrative Style:
+            Render content from a neutral third-party perspective
+            Content Purity:
+            Strip all supplementary explanations, postscripts, and editorial notes
+            Article to Translate:
+            """
             question = prompt + paragraph
             print('question:\n', question)
             print('current paragraph index:', paragraph_count)
             translated_paragraph = get_deepseek_translation(question)
             print('deepseek answer:\n', translated_paragraph)
             # write txt file
-            with open(txt_file_output_path, mode='a+', encoding='utf-8') as output_file:
+            with open(self.translation_txt_file_output_path, mode='a+', encoding='utf-8') as output_file:
                 output_file.write('\n')
                 output_file.write(translated_paragraph)
                 output_file.flush()
@@ -422,7 +438,7 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
 
             pass
         # 保存文档
-        doc.save(word_file_output_path)
+        doc.save(self.translation_word_file_output_path)
         return
 
     def run(self):
@@ -432,6 +448,7 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
         # os.system('start {}'.format(self.result_directory))
         # os.system('start {}'.format(self.result_abs_word_file_name))
         self.process_result()
+        os.system('start {}'.format(self.translation_word_file_output_path))
         pass
 
     pass
@@ -443,7 +460,7 @@ pass
 def task1():
     target_url = 'https://newsukraine.rbc.ua/news'
     referred_url = 'https://newsukraine.rbc.ua/'
-    crawl_number = 30
+    crawl_number = 9
     ins = CrawlerNewsUkraineRbcUaNewsPage(target_url, None, crawl_number)
     ins.set_referred_url(referred_url)
     # ins.set_crawl_today(True)
