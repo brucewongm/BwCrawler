@@ -17,6 +17,76 @@ from fake_useragent import UserAgent
 from CrawlerBaseExclusion import exclusion
 
 DebugSwitch = 1
+from datetime import datetime
+from collections import namedtuple
+
+
+def get_current_datetime_tuple():
+    """
+    获取当前日期时间并转换为 namedtuple 格式
+
+    返回:
+        CDateTime: 包含当前年、月、日、时、分、秒的 namedtuple
+    """
+    current_datetime = datetime.now()
+
+    # 定义一个 namedtuple 来存储日期和时间
+    CDateTime = namedtuple('CDateTime', ['year', 'month', 'day', 'hour', 'minute', 'second'])
+
+    # 将当前日期和时间转换为 namedtuple
+    dt_tuple = CDateTime(
+        year=current_datetime.year,
+        month=current_datetime.month,
+        day=current_datetime.day,
+        hour=current_datetime.hour,
+        minute=current_datetime.minute,
+        second=current_datetime.second
+    )
+
+    return dt_tuple
+
+
+def get_rbc_page_datetime_tuple(time_div):
+    # 定义一个 namedtuple
+    UrlDateTime = namedtuple('DateTime', ['year', 'month', 'day', 'hour', 'minute'])
+
+    if time_div:
+        # 提取时间文本
+        date_time_str = time_div.get_text(strip=True)
+        # print("date_time_str:", date_time_str)
+
+        # 解析时间和日期字符串
+        try:
+            # 使用正则表达式分割字符串
+            target_result = re.split(r'[:,\s-]+', date_time_str)
+            # 提取出月份、日期、年份、小时和分钟
+            _, month_name, day_name, year_name, hour_name, minute_name = target_result
+
+            # 将月份转换为数字
+            month_dict = {
+                'January': 1, 'February': 2, 'March': 3, 'April': 4,
+                'May': 5, 'June': 6, 'July': 7, 'August': 8,
+                'September': 9, 'October': 10, 'November': 11, 'December': 12
+            }
+            month_number = month_dict[month_name]
+
+            # 将字符串转换为整数
+            year = int(year_name)
+            day = int(day_name)
+            hour = int(hour_name)
+            minute = int(minute_name)
+
+            # 返回 namedtuple
+            return UrlDateTime(year=year, month=month_number, day=day,
+                               hour=hour, minute=minute)
+        except ValueError:
+            print("无法解析时间格式")
+            return UrlDateTime(year='', month='', day='', hour='', minute='')
+
+    else:
+        print("未找到时间信息")
+        return UrlDateTime(year='', month='', day='', hour='', minute='')
+    pass
 
 
 def set_logger(logger_obj, logger_file_name_with_no_suffix,
@@ -152,21 +222,14 @@ def get_rbc_page_date(soup):
     return rbc_date
 
 
-def date_match_today(soup):
-    dprint('soup:', soup)
+def date_match_today(time_div):
     date_match = False
-    week_month_date = get_weekday_month_date()
-    dprint('value of week_month_date:', week_month_date)
-    page_date = get_rbc_page_date(soup)
-    dprint('value of page_date:', page_date)
-    for element in week_month_date:
-        if element in page_date:
-            date_match = True
-            pass
-        else:
-            date_match = False
-            break
-        pass
+    current_dt = get_current_datetime_tuple()
+    page_dt = get_rbc_page_datetime_tuple(time_div)
+    if all([current_dt.year == page_dt.year,
+            current_dt.month == page_dt.month,
+            current_dt.day == page_dt.day]):
+        date_match = True
     dprint('value of date compare:', date_match)
     return date_match
 

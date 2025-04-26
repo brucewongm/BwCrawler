@@ -238,7 +238,9 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
             soup = BeautifulSoup(response.text, 'html.parser')
             # check date
             if self.crawl_only_today:
-                if date_match_today(soup):
+                # 查找包含时间的 div 标签
+                time_div = soup.find('div', class_='time')
+                if date_match_today(time_div):
                     dprint('notice:date matched today!')
                     pass
                 else:
@@ -258,6 +260,12 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
                         file.flush()
                         pass
                     elif element.name == 'p':
+                        file.write('\n')
+                        file.write(element.text.strip())
+                        file.write('\n')
+                        file.flush()
+                        pass
+                    elif element.name == 'li':
                         file.write('\n')
                         file.write(element.text.strip())
                         file.write('\n')
@@ -405,6 +413,26 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
             Strip all supplementary explanations, postscripts, and editorial notes
             Article to Translate:
             """
+            prompt = """
+            Translation Task Guidelines
+            Objective: Translate the provided article into Chinese while strictly applying these rules:
+            Command:
+            If the user's input does not mention economy/politics or military, respond exactly with a single space character (" ").
+            Never add explanations, postscripts, or any other text.
+            Only respond normally if politics/military is directly discussed.
+            Reference Handling:
+            Omit all sentences containing "further details", "more details" (especially in final paragraphs) that link to external websites.
+            Text Formatting:
+            Remove all parenthetical content (names + parentheses).
+            Delete the following symbols: # *
+            Exception: Retain if symbols are semantically crucial (e.g., * for emphasis in linguistics).
+            New Rule: If a line of text does not end with punctuation, enclose the entire line within square brackets 【】.
+            Narrative Style:
+            Render content from a neutral third-party perspective.
+            Content Purity:
+            Strip all supplementary explanations, postscripts, and editorial notes.
+            Article to Translate:
+            """
             question = prompt + paragraph
             print('question:\n', question)
             print('current paragraph index:', paragraph_count)
@@ -460,7 +488,7 @@ pass
 def task1():
     target_url = 'https://newsukraine.rbc.ua/news'
     referred_url = 'https://newsukraine.rbc.ua/'
-    crawl_number = 9
+    crawl_number = 30
     ins = CrawlerNewsUkraineRbcUaNewsPage(target_url, None, crawl_number)
     ins.set_referred_url(referred_url)
     # ins.set_crawl_today(True)
