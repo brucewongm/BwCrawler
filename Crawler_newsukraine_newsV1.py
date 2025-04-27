@@ -400,7 +400,7 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
             Command:
             If the user's input does not mention economy/politics/military, 
             or if it is about astronomy/constellations, travel/scenery, health/food, pets, 
-            or emotions, respond exactly with a single space character (' ').
+            or astrology/emotions, respond exactly with a single space character (' ').
             Never add explanations, postscripts, or any other text.
             Only respond normally if economy/politics/military is directly discussed.
             Reference Handling:
