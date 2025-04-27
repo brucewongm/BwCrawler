@@ -396,30 +396,13 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
             # add text
             prompt = """
             Translation Task Guidelines
-            Objective:Translate the provided article into Chinese while strictly applying these rules:
-            Command:
-            If the user's input does not mention economy/politics or military, respond exactly with a single space character (" ").
-            Never add explanations, postscripts, or any other text.
-            Only respond normally if politics/military is directly discussed.
-            Reference Handling:
-            Omit all sentences containing "further details", "more details" (especially in final paragraphs) that link to external websites.
-            Text Formatting:
-            Remove all parenthetical content (names + parentheses)
-            Delete the following symbols: # * 
-            Exception: Retain if symbols are semantically crucial (e.g., * for emphasis in linguistics)
-            Narrative Style:
-            Render content from a neutral third-party perspective
-            Content Purity:
-            Strip all supplementary explanations, postscripts, and editorial notes
-            Article to Translate:
-            """
-            prompt = """
-            Translation Task Guidelines
             Objective: Translate the provided article into Chinese while strictly applying these rules:
             Command:
-            If the user's input does not mention economy/politics or military, respond exactly with a single space character (" ").
+            If the user's input does not mention economy/politics/military, 
+            or if it is about astronomy/constellations, travel/scenery, health/food, pets, 
+            or emotions, respond exactly with a single space character (' ').
             Never add explanations, postscripts, or any other text.
-            Only respond normally if politics/military is directly discussed.
+            Only respond normally if economy/politics/military is directly discussed.
             Reference Handling:
             Omit all sentences containing "further details", "more details" (especially in final paragraphs) that link to external websites.
             Text Formatting:

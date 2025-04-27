@@ -155,24 +155,24 @@ def download_image1(url, filename):
         with open(filename, 'wb') as f:
             for chunk in response.iter_content(1024):
                 f.write(chunk)
-        print(f"Downloaded {filename}")
+        print(f"Downloaded \n{filename}\n successfully!")
     except requests.RequestException as e:
         # else:
         print(f"Error downloading the image {url}: {e}")
 
 
 def download_image(url, filename):
-    # try:
-    if True:
+    try:
+    # if True:
         response = requests.get(url, stream=True)
         response.raise_for_status()  # 检查请求是否成功
         with open(filename, 'wb') as f:
             for chunk in response.iter_content(1024):
                 f.write(chunk)
-        print(f"Downloaded {filename}")
-    # except requests.RequestException as e:
-    else:
-        print(f"Error downloading the image {url}: {e}")
+        print(f"Downloaded \n{filename}\n successfully!")
+    except requests.RequestException as e:
+    # else:
+        print(f"Error occurred when downloading the image {url}: {e}")
     pass
 
 
@@ -669,7 +669,7 @@ class WebpagePictureDownloader(object):
             url_without_suffix = url.rsplit('.', maxsplit=1)[0]
             # temp_name_list = re.split(pattern=r'[/_\-]', string=url_without_suffix, flags=re.I)
             raw_file_name = url_without_suffix.rsplit('/')[-1]
-            for idx, img_url in enumerate(image_link_list):
+            for index, img_url in enumerate(image_link_list):
                 print('\n' + '>' * 100)
                 found_this_size = re.findall(r'\S+_(\d+x\d+)\.jpg', img_url, re.I)
                 if not found_this_size:
@@ -688,7 +688,7 @@ class WebpagePictureDownloader(object):
                 if file_ext not in ['jpg', 'jpeg']:
                     continue
                     pass
-                filename = os.path.join(save_folder, f'{raw_file_name}_image_{idx + 1}.{file_ext}')
+                filename = os.path.join(save_folder, f'{raw_file_name}_image_{index + 1}.{file_ext}')
                 print('Downloading picture with name:', filename)
                 cls.download_one_image(img_url, filename)
                 # time.sleep(6)
