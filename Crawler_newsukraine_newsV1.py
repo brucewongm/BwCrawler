@@ -399,8 +399,8 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
             Objective: Translate the provided article into Chinese while strictly applying these rules:
             Command:
             If the user's input does not mention economy/politics/military, 
-            or if it is about astronomy/constellations, travel/scenery, health/food, pets, 
-            or astrology/emotions, respond exactly with a single space character (' ').
+            or if it is about astronomy/constellations, travel/scenery, health/food, life/pets, or
+            astrology/emotions, medicine/disease respond exactly with a single space character (' ').
             Never add explanations, postscripts, or any other text.
             Only respond normally if economy/politics/military is directly discussed.
             Reference Handling:
@@ -409,12 +409,56 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
             Remove all parenthetical content (names + parentheses).
             Delete the following symbols: # *
             Exception: Retain if symbols are semantically crucial (e.g., * for emphasis in linguistics).
-            New Rule: If a line of text does not end with punctuation, enclose the entire line within square brackets 【】.
+            New Rule: 
+            If a line of text does not end with punctuation, enclose the entire line within square brackets 【】.
+            If word "enemy" contained in the content refers to Russia, it should be directly translated as "Russia"
             Narrative Style:
             Render content from a neutral third-party perspective.
             Content Purity:
             Strip all supplementary explanations, postscripts, and editorial notes.
             Article to Translate:
+            """
+            #
+            prompt = """
+            Translation Task Guidelines
+            Objective: Translate the provided article into Chinese while strictly applying the following rules:
+
+            1. Content Filtering Rules
+            If the input does not mention economy/politics/military, or if it is about:
+
+            Astronomy/constellations, travel/scenery, health/food, life/pets
+
+            Astrology/emotions, medicine/disease
+            → Respond exactly with a single space (' ').
+
+            Only proceed with translation if the content directly discusses economy/politics/military.
+
+            2. Reference Handling
+            Omit any sentence containing:
+
+            "further details", "more details" (especially in final paragraphs linking to external websites).
+
+            3. Text Formatting
+            Remove:
+
+            All parenthetical content (text within parentheses, including names).
+
+            Symbols # * unless semantically crucial (e.g., * for linguistic emphasis).
+
+            New Rule:
+
+            If a line lacks ending punctuation, enclose it in square brackets 【】.
+
+            4. Specific Term Handling
+            If the word "enemy" refers to Russia, translate it directly as "俄罗斯" (Russia).
+
+            5. Narrative Style
+            Translate from a neutral third-party perspective (no editorializing).
+
+            6. Content Purity
+            Strip:
+
+            All supplementary explanations, postscripts, or editorial notes.
             """
             question = prompt + paragraph
             print('question:\n', question)
