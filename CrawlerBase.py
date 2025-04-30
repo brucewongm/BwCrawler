@@ -9,16 +9,31 @@ import requests
 import time
 import urllib.parse
 
-from Tools.demo.sortvisu import steps
+# from Tools.demo.sortvisu import steps
 from bs4 import BeautifulSoup
 from docx import Document
 from fake_useragent import UserAgent
-
-from CrawlerBaseExclusion import exclusion
-
-DebugSwitch = 1
 from datetime import datetime
 from collections import namedtuple
+from openai import OpenAI
+
+from CrawlerBaseExclusion import exclusion
+from MyAPIKey import MY_API_KEY
+
+DebugSwitch = 1
+
+def get_deepseek_translation(content, temperature=1.3):
+    client = OpenAI(api_key=MY_API_KEY, base_url="https://api.deepseek.com")
+    response = client.chat.completions.create(
+        model="deepseek-chat",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant and capable translator"},
+            {"role": "user", "content": content},
+        ],
+        temperature=temperature,
+        stream=False)
+    target = response.choices[0].message.content
+    return target
 
 
 def get_current_datetime_tuple():
@@ -163,7 +178,7 @@ def download_image1(url, filename):
 
 def download_image(url, filename):
     try:
-    # if True:
+        # if True:
         response = requests.get(url, stream=True)
         response.raise_for_status()  # 检查请求是否成功
         with open(filename, 'wb') as f:
@@ -171,7 +186,7 @@ def download_image(url, filename):
                 f.write(chunk)
         print(f"Downloaded \n{filename}\n successfully!")
     except requests.RequestException as e:
-    # else:
+        # else:
         print(f"Error occurred when downloading the image {url}: {e}")
     pass
 

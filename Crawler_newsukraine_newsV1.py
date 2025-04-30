@@ -1,12 +1,8 @@
-# from http.cookiejar import reach
-
 from PIL import Image
 from io import BytesIO
-from openai import OpenAI
 
 from CrawlerBase import *
 from CrawlerBaseExclusion import *
-from MyAPIKey import MY_API_KEY
 
 exclusion = """https://newsukraine.rbc.ua/
 ua https://www.rbc.ua/
@@ -60,20 +56,6 @@ OPEN = 1
 CLOSED = 0
 TIME_INTERVAL_OF_WEBPAGES = 6
 TIME_INTERVAL_OF_PICTURES = 3
-
-
-def get_deepseek_translation(content, temperature=1.3):
-    client = OpenAI(api_key=MY_API_KEY, base_url="https://api.deepseek.com")
-    response = client.chat.completions.create(
-        model="deepseek-chat",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant and capable translator"},
-            {"role": "user", "content": content},
-        ],
-        temperature=temperature,
-        stream=False)
-    target = response.choices[0].message.content
-    return target
 
 
 class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
