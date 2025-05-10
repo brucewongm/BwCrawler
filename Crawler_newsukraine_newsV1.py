@@ -429,7 +429,7 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
 
             New Rule:
 
-            If a line lacks ending punctuation, enclose it in square brackets 【】.
+            If a subtitle-like line lacks ending punctuation, enclose it in square brackets 【】.
 
             4. Specific Term Handling
             If the word "enemy" refers to Russia, translate it directly as "俄罗斯" (Russia).
@@ -439,8 +439,8 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
 
             6. Content Purity
             Strip:
-
-            All supplementary explanations, postscripts, or editorial notes.
+            All supplementary explanations, postscripts, editorial notes.
+            Any tip,hint which is commonly provided by system within parentheses.
             """
             question = prompt + paragraph
             print('question:\n', question)
