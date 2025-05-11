@@ -1,3 +1,5 @@
+import os.path
+
 from PIL import Image
 from io import BytesIO
 
@@ -77,7 +79,7 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
         #
         self.result_word_file_name = self.result_txt_file_name.split('.')[0] + '.docx'
         self.current_directory = os.getcwd()
-        self.result_directory = os.path.join(self.current_directory, 'results')
+        self.result_directory = os.path.join(self.current_directory, 'news_ukraine_results')
         self.result_abs_txt_file_name = os.path.join(self.result_directory, self.result_txt_file_name)
         # print(self.result_abs_txt_file_name)
         self.result_abs_word_file_name = os.path.join(self.result_directory, self.result_word_file_name)
@@ -87,6 +89,8 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
         self.back_door_state = OPEN
         #
         self.crawl_only_today = False
+        #
+        self.picture_download_directory = os.path.join(self.current_directory, 'news_ukraine_downloaded_pictures')
 
     def set_crawl_today(self, condition: bool):
         self.crawl_only_today = condition

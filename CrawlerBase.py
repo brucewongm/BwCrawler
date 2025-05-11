@@ -24,6 +24,7 @@ DebugSwitch = 1
 
 
 def get_deepseek_translation(user_content=None, system_content=None, temperature=1.3):
+    print('Start getting deepseek response.')
     if not system_content:
         system_content = "You are a helpful assistant and capable translator"
         pass
@@ -428,7 +429,7 @@ class CrawlerBase(object):
                 file.write('')
                 pass
             pass
-        self.logger.debug('initiate finised text file successfully.')
+        self.logger.debug('initiate finished text file successfully.')
         # 获取文件内容
         with open(self.finished_target_url_log_file, 'r+', encoding='utf-8') as file_object:
             url_lines = file_object.readlines()

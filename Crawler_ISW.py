@@ -1,6 +1,6 @@
 # import os
 import os.path
-from typing import List
+from typing import List, Dict
 from urllib.parse import urljoin
 # import requests
 # from bs4 import BeautifulSoup
@@ -9,6 +9,11 @@ from docx.shared import Inches
 # from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
 from CrawlerBase import *
+
+TYPE_PDF_URL = 'pdf_url'
+TYPE_IMAGE_URL = 'image_url'
+TYPE_TEXT = 'text'
+TYPE_SUBMITTED = 'submitted'
 
 
 # class ISWScraper:
@@ -228,13 +233,13 @@ from CrawlerBase import *
 #             return None
 #         except Exception as e:
 #             print(f"An error occurred: {e}")
-#             return None
+#             return Non
 
 
 class ISWScraperNew:
     def __init__(self, base_url="https://understandingwar.org",
                  image_dir="isw_downloaded_images_" + datetime.now().strftime("%Y%m%d_%H%M%S"),
-                 output_dir="output_docs"):
+                 output_dir="isw_output_docs"):
         self.base_url = base_url
         self.image_dir = image_dir
         self.output_dir = output_dir
@@ -250,7 +255,7 @@ class ISWScraperNew:
 
     def _translate_to_chinese(self, text):
         """将英文文本翻译为中文"""
-        prompt = ("Task: Translate the following text sentence-by-sentence into Chinese while:"
+        prompt = ("Task: Translate the target content sentence-by-sentence into Chinese while:"
                   "Requirements: "
                   "1. Preserve original formatting and punctuation "
                   "2. Maintain paragraph structures "
@@ -259,6 +264,8 @@ class ISWScraperNew:
                   "5. Make error corrections when semantically crucial"
                   "Restrictions: "
                   "- No content analysis/interpretation "
+                  "- Remove any translation instruction/tip/hint which is commonly provided by system within parentheses."
+                  "the target content is as follows:"
                   + text)
         if DebugSwitch:
             pprint('Sending prompt:\n' + prompt)
@@ -318,6 +325,7 @@ class ISWScraperNew:
 
     def download_image(self, url):
         """下载单张图片并返回本地路径"""
+        print('Start downloading [{}]'.format(url))
         try:
             response = requests.get(url, stream=True, headers=self.headers)
             response.raise_for_status()
@@ -338,7 +346,7 @@ class ISWScraperNew:
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
 
-            print(f"下载成功: {save_path}")
+            print(f"Download picture successfully: {save_path}")
             return save_path
         except Exception as e:
             print(f"下载失败 {url}: {e}")
@@ -346,17 +354,15 @@ class ISWScraperNew:
 
     def download_pdf(self, pdf_link):
         """下载PDF文件"""
+        print('Start downloading [{}]'.format(pdf_link))
         try:
             response = requests.get(pdf_link, stream=True, headers=self.headers)
             response.raise_for_status()
-
             filename = os.path.basename(pdf_link)
             save_path = os.path.join(self.output_dir, filename)
-
             with open(save_path, 'wb') as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
-
             print(f"PDF文件已成功下载到: {save_path}")
             return save_path
         except Exception as e:
@@ -436,7 +442,15 @@ class ISWScraperNew:
 
         return content_elements
 
-    def _generate_word_document(self, metadata, content_elements, pdf_path=None):
+    def _download_images_through_url_list(self, image_urls: List) -> List:
+        assert len(image_urls) > 0
+        print(f'Start downloading {len(image_urls)} pieces of pictures...')
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            local_path_list = list(executor.map(self.download_image, image_urls))
+            pass
+        return local_path_list
+
+    def _generate_word_document_old(self, metadata, content_elements, pdf_path=None):
         """生成Word文档"""
         doc = Document()
         doc.add_heading(metadata['title_zh'], level=1)
@@ -467,6 +481,34 @@ class ISWScraperNew:
         print(f"Word file was generated successfully: {doc_path}")
         return doc_path
 
+    def _generate_word_document(self, contents_dict_list):
+        """生成Word文档"""
+        doc = Document()
+        for con_dict in contents_dict_list:
+            if con_dict['content_type'] == TYPE_TEXT:
+                doc.add_paragraph(con_dict['translation'], style='Intense Quote')
+                doc.add_paragraph("\n")
+                pass
+            elif con_dict['content_type'] == TYPE_IMAGE_URL and con_dict['local_path']:
+                try:
+                    doc.add_picture(con_dict['local_path'], width=Inches(5.0))
+                    doc.add_paragraph(f"图片: {os.path.basename(con_dict['local_path'])}")
+                    doc.add_paragraph("\n")
+                except Exception as e:
+                    print(f"无法插入图片 {con_dict['local_path']}: {e}")
+                    pass
+                pass
+            elif con_dict['content_type'] == TYPE_SUBMITTED:
+                doc.add_paragraph(f"发布日期: {con_dict['content']}")
+                doc.add_paragraph("\n")
+                pass
+            pass
+        doc_filename = f"result{moment()}.docx"
+        doc_path = os.path.join(self.output_dir, doc_filename)
+        doc.save(doc_path)
+        print(f"Word file was generated successfully: {doc_path}")
+        return doc_path
+
     def process_image_element(self, img_element):
         img_url = img_element.get('src')
         if not img_url.startswith(('http://', 'https://')):
@@ -478,7 +520,7 @@ class ISWScraperNew:
             return ''
         return img_url
 
-    def _extract_all_text(self, soup) -> List:
+    def _extract_all_text(self, soup) -> List[Dict]:
         # 获取原始元素列表（保持文档顺序）
         elements = soup.find_all(
             lambda tag:
@@ -488,55 +530,41 @@ class ISWScraperNew:
             (tag.name == 'img' and tag.find_parent('div', class_='field-name-body')) or
             (tag.name == 'div' and 'field-name-field-pdf-report' in tag.get('class', []))
         )
-        # 按原始顺序输出元素内容
-        # result = [elem.get_text(strip=True) for elem in elements]
-        #
         result = []
+        print(' Start traversing elements')
         for elem in elements:
             if elem.name == 'img':
-                result.append(('type_image_url', self.process_image_element(elem)))
+                # print('Found element [img]')
+                result.append({'content_type': TYPE_IMAGE_URL,
+                               'content': self.process_image_element(elem)})
                 pass
+            elif elem.name == 'span' and 'submitted' in elem.get('class', []):
+                # print('Found element [span]')
+                submitted = elem.get_text(strip=True)
+                result.append({'content_type': TYPE_SUBMITTED,
+                               'content': submitted})
+
             elif elem.name == 'div' and 'field-name-field-pdf-report' in elem.get('class', []):
+                # print('Found element [div]')
                 link = elem.find('a', href=True)
                 if link:
                     pdf_url = link['href']
                     # URL标准化处理
                     if not pdf_url.startswith(('http://', 'https://')):
                         pdf_url = urljoin(self.base_url, pdf_url)
-                    result.append(('type_pdf_url', pdf_url))
+                    result.append({'content_type': TYPE_PDF_URL,
+                                   'content': pdf_url})
                     pass
                 pass
             else:
                 # 提取文本内容
-                result.append(('type_text', elem.get_text(strip=True)))
+                # print('Found element [text]')
+                result.append({'content_type': TYPE_TEXT,
+                               'content': elem.get_text(strip=True)})
                 pass
             pass
 
         return result
-
-    def scrape_and_export_old(self, url):
-        """处理单个文章URL"""
-        print(f"\nStart dealing with url: {url}")
-        soup = self._get_page_object(url)
-        if not soup:
-            return None
-
-        metadata = self._extract_metadata(soup)
-        content_elements = self._extract_content_elements(soup)
-        pdf_link = self._extract_pdf_link(soup)
-
-        pdf_path = None
-        if pdf_link:
-            pdf_path = self.download_pdf(pdf_link)
-
-        content_elements = self._download_content_images(content_elements)
-        doc_path = self._generate_word_document(metadata, content_elements, pdf_path)
-
-        print('-' * 80)
-        return {
-            'metadata': metadata,
-            'doc_path': doc_path
-        }
 
     def scrape_and_export(self, url) -> List:
         """处理单个文章URL"""
@@ -544,28 +572,35 @@ class ISWScraperNew:
         soup = self._get_page_object(url)
         if not soup:
             return []
-
-        result = self._extract_all_text(soup)
-        # print(result)
-        return result
-
-        # metadata = self._extract_metadata(soup)
-        # content_elements = self._extract_content_elements(soup)
-        # pdf_link = self._extract_pdf_link(soup)
-        #
-        # pdf_path = None
-        # if pdf_link:
-        #     pdf_path = self.download_pdf(pdf_link)
-        #
-        # content_elements = self._download_content_images(content_elements)
-        # doc_path = self._generate_word_document(metadata, content_elements, pdf_path)
-        #
-        # print('-' * 80)
-        # return {
-        #     'metadata': metadata,
-        #     'doc_path': doc_path
-        # }
         pass
+        print('Starting extracting all text')
+        result = self._extract_all_text(soup)
+        print('Start translating and downloading')
+
+        txt_path = os.path.join(self.output_dir, 'result_{}.txt'.format(moment()))
+        for content_dict in result:
+            #
+            with open(txt_path, encoding='utf-8', mode='a+') as txt_file:
+                txt_file.write(content_dict['content'])
+                txt_file.flush()
+                pass
+            #
+            content_type = content_dict['content_type']
+            content = content_dict['content']
+            if content_type == TYPE_TEXT:
+                translation = self._translate_to_chinese(content)
+                content_dict['translation'] = translation
+                pass
+            elif content_type == TYPE_PDF_URL:
+                self.download_pdf(content)
+                pass
+            elif content_type == TYPE_IMAGE_URL:
+                local_path = self.download_image(content)
+                content_dict['local_path'] = local_path
+                pass
+            pass
+        self._generate_word_document(result)
+        return result
 
     def process_keyword_articles(self, keywords, number=0):
         """主方法：根据关键词查找并处理文章"""
@@ -595,40 +630,20 @@ class ISWScraperNew:
     pass
 
 
-# def check1():
-#     scraper = ISWScraper()
-#
-#     # 示例URL
-#     url = "https://understandingwar.org/backgrounder/russian-offensive-campaign-assessment-april-28-2025/"
-#
-#     # 抓取文章
-#     result = scraper.scrape_article(url, download_images=False, download_pdf=False)
-#
-#     for k, v in result.items():
-#         print(k, ":", v)
-#
-#     # 也可以单独下载PDF
-#     # pdf_link = "https://understandingwar.org/sites/default/files/2025-04-28-PDF-Russian%20Offensive%20Campaign%20Assessment.pdf"
-#     # scraper.download_pdf(pdf_link)
-#
-
 def check2():
+    start = time.time()
     scraper = ISWScraperNew()
-
     # 定义关键词列表
     title_keywords = ['russian', 'offensive', 'campaign', 'assessment']
-
     # 执行处理
     results = scraper.process_keyword_articles(title_keywords, 1)
     print('About to print result')
     for ele in results:
-        for type_,sub_ele in ele:
-            print(type_)
-            pprint(sub_ele)
-            pass
+        pprint(ele)
         pass
-
-    # 输出结果摘要
+    pass
+    end = time.time()
+    print(f"执行耗时: {end - start:.4f} 秒")
     pass
 
 
