@@ -262,9 +262,10 @@ class ISWScraperNew:
                   "3. Strictly adhere to provided terminology lists (if any) "
                   "4. Slight cultural adaptation "
                   "5. Make error corrections when semantically crucial"
+                  "6. Never attach any description,explanation or instruction following the translation"
                   "Restrictions: "
                   "- No content analysis/interpretation "
-                  "- Remove any translation instruction/tip/hint which is commonly provided by system within parentheses."
+                  "- Remove all the instructions/tips/hints which follow the translation are commonly given by system within parentheses."
                   "the target content is as follows:"
                   + text)
         if DebugSwitch:
@@ -396,35 +397,35 @@ class ISWScraperNew:
             'submitted': submitted
         }
 
-    def _extract_content_elements(self, soup):
-        """提取正文内容元素（文本和图片）"""
-        content_div = soup.find('div', class_='field-name-body')
-        if not content_div:
-            print("Could not find main content")
-            return []
-
-        elements = []
-
-        for element in content_div.children:
-            if element.name == 'p':
-                text = element.get_text(strip=True)
-                if text:
-                    elements.append({
-                        'type': 'text',
-                        'content': text,
-                        'content_zh': self._translate_to_chinese(text)
-                    })
-            elif element.name == 'img':
-                img_url = element.get('src')
-                if img_url:
-                    if not img_url.startswith(('http://', 'https://')):
-                        img_url = urljoin(self.base_url, img_url)
-                    elements.append({
-                        'type': 'image',
-                        'url': img_url
-                    })
-
-        return elements
+    # def _extract_content_elements(self, soup):
+    #     """提取正文内容元素（文本和图片）"""
+    #     content_div = soup.find('div', class_='field-name-body')
+    #     if not content_div:
+    #         print("Could not find main content")
+    #         return []
+    #
+    #     elements = []
+    #
+    #     for element in content_div.children:
+    #         if element.name == 'p':
+    #             text = element.get_text(strip=True)
+    #             if text:
+    #                 elements.append({
+    #                     'type': 'text',
+    #                     'content': text,
+    #                     'content_zh': self._translate_to_chinese(text)
+    #                 })
+    #         elif element.name == 'img':
+    #             img_url = element.get('src')
+    #             if img_url:
+    #                 if not img_url.startswith(('http://', 'https://')):
+    #                     img_url = urljoin(self.base_url, img_url)
+    #                 elements.append({
+    #                     'type': 'image',
+    #                     'url': img_url
+    #                 })
+    #
+    #     return elements
 
     def _download_content_images(self, content_elements):
         """下载内容中的图片并更新本地路径"""
@@ -582,11 +583,14 @@ class ISWScraperNew:
             #
             with open(txt_path, encoding='utf-8', mode='a+') as txt_file:
                 txt_file.write(content_dict['content'])
+                txt_file.write('\n')
                 txt_file.flush()
                 pass
             #
             content_type = content_dict['content_type']
             content = content_dict['content']
+            if not content.strip():
+                continue
             if content_type == TYPE_TEXT:
                 translation = self._translate_to_chinese(content)
                 content_dict['translation'] = translation
