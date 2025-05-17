@@ -10,7 +10,7 @@ class CrawlerHowToWiki(CrawlerBase):
     def run(self):
         response = requests.get(self.target_url, headers=self.headers_formed)
         self.extract_response_content(
-            response, self.result_abs_txt_file_name, True)
+            response, self.abs_txt_result_file_name, True)
         pass
 
     pass
@@ -21,11 +21,11 @@ def task1():
     ins = CrawlerHowToWiki(url, None)
     ins.run()
     print('Finished! transforming files...\nOpening folder {} and \nfile {}'.format(
-        ins.result_directory, ins.result_abs_txt_file_name))
-    txt2word(ins.result_abs_txt_file_name, ins.result_abs_word_file_name)
+        ins.text_result_directory, ins.abs_txt_result_file_name))
+    txt2word(ins.abs_txt_result_file_name, ins.abs_word_result_file_name)
     #
-    os.system('start {}'.format(ins.result_directory))
-    os.startfile(ins.result_abs_word_file_name)
+    os.system('start {}'.format(ins.text_result_directory))
+    os.startfile(ins.abs_word_result_file_name)
     pass
 
 

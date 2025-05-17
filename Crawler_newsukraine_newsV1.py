@@ -67,22 +67,16 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
         self.translation_txt_file_output_path = None
         self.target_url = target_url
         self.target_crawl_number = target_crawl_number
-        if result_txt_file_name:
-            self.result_txt_file_name = result_txt_file_name
-            pass
-        else:
-            self.result_txt_file_name = 'news_ukraine_rbc_crawl_results_{}.txt'.format(moment())
-            pass
         #
         self.headers_formed = {}
         self.link_text_link_url_tuple_list = []
         #
-        self.result_word_file_name = self.result_txt_file_name.split('.')[0] + '.docx'
-        self.current_directory = os.getcwd()
-        self.result_directory = os.path.join(self.current_directory, 'news_ukraine_results')
-        self.result_abs_txt_file_name = os.path.join(self.result_directory, self.result_txt_file_name)
+        # self.result_word_file_name = self.relative_txt_file_name.split('.')[0] + '.docx'
+        # self.current_directory = os.getcwd()
+        # self.result_directory = os.path.join(self.current_directory, 'news_ukraine_results')
+        # self.result_abs_txt_file_name = os.path.join(self.result_directory, self.relative_txt_file_name)
         # print(self.result_abs_txt_file_name)
-        self.result_abs_word_file_name = os.path.join(self.result_directory, self.result_word_file_name)
+        # self.result_abs_word_file_name = os.path.join(self.result_directory, self.result_word_file_name)
         # print(self.result_abs_word_file_name)
         #
         self.front_door_state = OPEN
@@ -266,14 +260,21 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
             print(f"Error: {response.status_code}")
             crawl_result = False
             pass
-        dprint('notice,crawled the page \n{}\nsuccessfully!'.format(link_url))
+        dprint('notice,crawled the page [{}]\nsuccessfully!'.format(link_url))
         return crawl_result
 
     def loop_crawl_news_page(self):
+        log_info = ('Start loop crawl\n'
+                    'txt file absolute path is {}\n'
+                    'word file absolute path is {}\n').format(
+            self.abs_txt_result_file_name,
+            self.abs_word_result_file_name)
+        self.logger.debug(log_info)
+        # exit()
         self.link_text_link_url_tuple_list = self.crawl_news_page_urls()
         # link_text_link_url_tuple_list = self.extract_response_title_link()
         #
-        with open(self.result_abs_txt_file_name, 'w') as file:
+        with open(self.abs_txt_result_file_name, 'w') as file:
             file.write('\ntitle:\n')
             pass
         loop_counter = 1
@@ -289,10 +290,12 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
                     break
                     pass
                 continue
+            #
             print('\ncrawling news page link number {}/{}'.format(str(loop_counter), str(self.target_crawl_number)))
             self.logger.debug('start crawling ({}).'.format(link_url))
-            crawl_this_successfully = self.crawl_one_url_content(link_text, link_url, self.result_abs_txt_file_name)
+            crawl_this_successfully = self.crawl_one_url_content(link_text, link_url, self.abs_txt_result_file_name)
             self.logger.debug('this crawl result:{}'.format(str(crawl_this_successfully)))
+            #
             count_down_seconds(TIME_INTERVAL_OF_WEBPAGES)
             if not crawl_this_successfully:
                 continue
@@ -320,7 +323,7 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
 
     def txt2word(self):
         # 读取TXT文件内容
-        with open(self.result_abs_txt_file_name, mode='r', encoding='utf-8') as file:
+        with open(self.abs_txt_result_file_name, mode='r', encoding='utf-8') as file:
             text = file.read()
             pass
         # 创建一个Document对象
@@ -328,7 +331,7 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
         # 添加文本内容到Word文档
         doc.add_paragraph(text)
         # 保存Word文档
-        doc.save(self.result_abs_word_file_name)
+        doc.save(self.abs_word_result_file_name)
         pass
 
     def get_image_filenames(self):
@@ -361,13 +364,15 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
         return None
 
     def process_result(self):
-        self.translation_txt_file_output_path = os.path.join(self.result_directory, 'translated' + moment() + '.txt')
-        self.translation_word_file_output_path = os.path.join(self.result_directory, 'translated' + moment() + '.docx')
+        self.translation_txt_file_output_path = os.path.join(self.text_result_directory,
+                                                             'translated' + moment() + '.txt')
+        self.translation_word_file_output_path = os.path.join(self.text_result_directory,
+                                                              'translated' + moment() + '.docx')
         print('target word path:', self.translation_word_file_output_path)
         # x = input(":")
         target_image_list = self.get_image_filenames()
         #
-        content = open(self.result_abs_txt_file_name, 'r+', encoding='utf-8').read()
+        content = open(self.abs_txt_result_file_name, 'r+', encoding='utf-8').read()
         content = re.sub(r'\s+title:\s+title:\s+', '', content)
         content = content.strip()
         # print(content)

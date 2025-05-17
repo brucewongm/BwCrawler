@@ -9,7 +9,6 @@ import requests
 import time
 import urllib.parse
 
-# from Tools.demo.sortvisu import steps
 from bs4 import BeautifulSoup
 from docx import Document
 from fake_useragent import UserAgent
@@ -22,6 +21,67 @@ from MyAPIKey import MY_API_KEY
 
 DebugSwitch = 1
 
+
+def sort_txt_with_date(folder_path):
+    """
+    获取指定目录下所有文件名包含年月日的TXT文件
+    并按创建时间降序排序(最新创建的在前)
+    :param folder_path: 目标文件夹路径
+    :return: 排序后的(文件名, 创建时间)元组列表
+    """
+    if not os.path.exists(folder_path):
+        return None
+        pass
+    valid_files = []
+    reg_date = r'\d{4}-\d{2}-\d{2}'
+    for filename in os.listdir(folder_path):
+        if filename.lower().endswith('.txt'):
+            # 检查文件名是否包含年月日格式(如2025-05-17)
+            if re.findall(reg_date, filename, re.I):
+                filepath = os.path.join(folder_path, filename)
+                if os.path.isfile(filepath):
+                    ctime = os.path.getctime(filepath)  # Windows获取创建时间
+                    readable_time = datetime.fromtimestamp(ctime).strftime('%Y-%m-%d %H:%M:%S')
+                    valid_files.append((filename, readable_time, ctime))
+                    pass
+                pass
+            pass
+        pass
+
+    # 按创建时间戳降序排序
+    if valid_files:
+        valid_files.sort(key=lambda x: x[2], reverse=True)
+        # return [(f[0], f[1]) for f in valid_files]
+        return [f[0] for f in valid_files]
+    else:
+        return None
+    pass
+
+# def sort_txt_by_creation_time(folder_path):
+#     """
+#     获取指定目录下所有TXT文件并按创建时间降序排序
+#     :param folder_path: 目标文件夹路径
+#     :return: 排序后的文件名列表(最新创建的在前)
+#     """
+#     if not os.path.exists(folder_path):
+#         return None
+#         pass
+#     # 获取TXT文件列表及创建时间
+#     files = []
+#     for filename in os.listdir(folder_path):
+#         if filename.lower().endswith('.txt'):
+#             filepath = os.path.join(folder_path, filename)
+#             if os.path.isfile(filepath):
+#                 ctime = os.path.getctime(filepath)  # Windows专用获取创建时间
+#                 files.append((filename, ctime))
+#                 pass
+#             pass
+#         pass
+#
+#     # 按创建时间降序排序
+#     files.sort(key=lambda x: x[1], reverse=True)
+#
+#     return [f[0] for f in files]
 
 def get_deepseek_translation(user_content=None, system_content=None, temperature=1.3):
     print('Start getting deepseek response.')
@@ -371,6 +431,8 @@ def get_cookies_from(response):
     return cookiejar
 
 
+
+
 class CrawlerBase(object):
     def __init__(self, target_url, result_txt_file_name=None):
         self.target_url = target_url
@@ -384,23 +446,31 @@ class CrawlerBase(object):
             self.relative_txt_file_name = result_txt_file_name
             pass
         else:
-            self.relative_txt_file_name = 'crawl_result{}_english.txt'.format(moment())
+            self.relative_txt_file_name = 'crawl_results_{}_original.txt'.format(moment())
             pass
-        self.relative_word_file_name = self.relative_txt_file_name.split('.')[0] + '.docx'
+        self.relative_word_file_name = None
         #
         self.log_directory = None
         self.logger = logging.getLogger('CrawlerBase')
         #
         self.current_directory = os.getcwd()
-        self.result_directory = None
-        self.picture_download_directory = None
-        self.result_abs_txt_file_name = None
-        self.result_abs_word_file_name = None
+        #
+        self.text_result_directory = None
+        self.graphic_result_directory = None
+        #
+        self.abs_txt_result_file_name = None
+        self.abs_word_result_file_name = None
         #
         self.headers_formed = {}
         self.gotten_page = ''
         #
         self.mark_counter = 20241101
+        self.brand_task_type = True
+        self.the_latest_txt_file_name = ''
+        request_answer = input('Is it a brand new task ? (Non-brand-new task will collect all available txt files.):')
+        if request_answer.lower() == 'n':
+            self.brand_task_type = False
+            pass
         #
 
     def initiate_environment(self):
@@ -409,20 +479,41 @@ class CrawlerBase(object):
         set_logger(self.logger, moment(), self.log_directory)
         # parent_folder = os.path.dirname(self.current_directory)
         today = time.strftime("%Y-%m-%d", time.localtime())
-        self.result_directory = os.path.join(self.current_directory, 'results{}'.format(today))
-        self.picture_download_directory = os.path.join(self.current_directory, 'downloaded_images{}'.format(today))
-        self.result_abs_txt_file_name = os.path.join(self.result_directory, self.relative_txt_file_name)
-        self.result_abs_word_file_name = os.path.join(self.result_directory, self.relative_word_file_name)
-        if not os.path.exists(self.result_directory):
-            os.makedirs(self.result_directory)
+        if not self.text_result_directory:
+            self.text_result_directory = os.path.join(self.current_directory, 'crawler_results_{}'.format(today))
+            pass
+        if not self.graphic_result_directory:
+            self.graphic_result_directory = os.path.join(self.current_directory,
+                                                           'crawler_downloaded_images_{}'.format(today))
+            pass
+        if not self.brand_task_type:
+            existed_file_list = sort_txt_with_date(self.text_result_directory)
+            if existed_file_list:
+                self.abs_txt_result_file_name = os.path.join(self.text_result_directory, existed_file_list[0])
+            else:
+                self.abs_txt_result_file_name = os.path.join(self.text_result_directory, self.relative_txt_file_name)
+                pass
+            pass
+        else:
+            self.abs_txt_result_file_name = os.path.join(self.text_result_directory, self.relative_txt_file_name)
+            pass
+        self.logger.debug('initiate text file name successfully.[{}]'.format(
+            self.abs_txt_result_file_name))
+        #
+        self.relative_word_file_name = self.relative_txt_file_name.split('.')[0] + '.docx'
+        self.abs_word_result_file_name = os.path.join(self.text_result_directory, self.relative_word_file_name)
+        self.logger.debug('initiate word file name successfully.[{}]'.format(
+            self.abs_word_result_file_name))
+        if not os.path.exists(self.text_result_directory):
+            os.makedirs(self.text_result_directory)
             pass
         self.logger.debug('initiate text result folder successfully.')
-        if not os.path.exists(self.picture_download_directory):
-            os.makedirs(self.picture_download_directory)
-            pass
-        self.logger.debug('initiate picture result folder successfully.')
+        # if not os.path.exists(self.graphic_result_directory):
+        #     os.makedirs(self.graphic_result_directory)
+        #     pass
+        # self.logger.debug('initiate picture result folder successfully.')
         # log file
-        self.finished_target_url_log_file = os.path.join(self.result_directory, 'finished_target_url.txt')
+        self.finished_target_url_log_file = os.path.join(self.text_result_directory, 'finished_target_url.txt')
         if not os.path.exists(self.finished_target_url_log_file):
             # 文件不存在，创建文件
             with open(self.finished_target_url_log_file, 'w') as file:
@@ -509,7 +600,7 @@ class CrawlerBase(object):
 
     def extract_response_content(self, response, result_abs_txt_file_name=None, add_mark=False):
         if not result_abs_txt_file_name:
-            result_abs_txt_file_name = self.result_abs_txt_file_name
+            result_abs_txt_file_name = self.abs_txt_result_file_name
         dprint('result file path:', result_abs_txt_file_name)
         # 检查请求是否成功
         if response.status_code == 200:
@@ -571,28 +662,28 @@ class CrawlerBase(object):
             image_url_list.append(img_url)
         return image_url_list
 
-    def download_page_pictures(self):
-        if self.response_text:
-            base_url = "{0.scheme}://{0.netloc}".format(urllib.parse.urlparse(self.target_url))
-            image_list = self.extract_images_list(base_url)
-            # 创建一个文件夹来保存图片
-            save_folder = 'downloaded_images'
-            os.makedirs(save_folder, exist_ok=True)
-            # 下载每张图片
-            for idx, img_url in enumerate(image_list):
-                print('\n' + '>' * 100)
-                print('downloading ', img_url)
-                # 构造文件名，例如 image1.jpg, image2.png 等
-                file_ext = img_url.split('.')[-1]  # 获取文件扩展名
-                if file_ext not in ['jpg', 'jpeg']:
-                    print('this picture is not jpg or jpeg files')
-                    continue
-                filename = os.path.join(save_folder, f'image_{idx + 1}.{file_ext}')
-                download_image(img_url, filename)
-                pass
-            pass
-        pass
-
+    # def download_page_pictures(self):
+    #     if self.response_text:
+    #         base_url = "{0.scheme}://{0.netloc}".format(urllib.parse.urlparse(self.target_url))
+    #         image_list = self.extract_images_list(base_url)
+    #         # 创建一个文件夹来保存图片
+    #         save_folder = 'downloaded_images'
+    #         os.makedirs(save_folder, exist_ok=True)
+    #         # 下载每张图片
+    #         for idx, img_url in enumerate(image_list):
+    #             print('\n' + '>' * 100)
+    #             print('downloading ', img_url)
+    #             # 构造文件名，例如 image1.jpg, image2.png 等
+    #             file_ext = img_url.split('.')[-1]  # 获取文件扩展名
+    #             if file_ext not in ['jpg', 'jpeg']:
+    #                 print('this picture is not jpg or jpeg files')
+    #                 continue
+    #             filename = os.path.join(save_folder, f'image_{idx + 1}.{file_ext}')
+    #             download_image(img_url, filename)
+    #             pass
+    #         pass
+    #     pass
+    #
     pass
 
 
@@ -683,8 +774,9 @@ class WebpagePictureDownloader(object):
             base_url = "{0.scheme}://{0.netloc}".format(urllib.parse.urlparse(url))
             image_link_list = cls.parse_page_for_image_list(page_content, base_url)
             # 创建一个文件夹来保存图片
-            # save_folder = 'downloaded_images'
-            os.makedirs(save_folder, exist_ok=True)
+            if not os.path.exists(save_folder):
+                os.makedirs(save_folder, exist_ok=True)
+                pass
             # 下载每张图片
             url_without_suffix = url.rsplit('.', maxsplit=1)[0]
             # temp_name_list = re.split(pattern=r'[/_\-]', string=url_without_suffix, flags=re.I)
@@ -729,7 +821,7 @@ class BatchCrawler(CrawlerBase):
     def run(self):
         self.link_text_link_url_tuple_list = self.extract_response_title_link()
         #
-        with open(self.result_abs_txt_file_name, 'w') as file:
+        with open(self.abs_txt_result_file_name, 'w') as file:
             file.write('')
             pass
         counter = 0
@@ -739,14 +831,14 @@ class BatchCrawler(CrawlerBase):
             # print(link_text, link_url)
             # continue
             sub_response = requests.get(link_url, headers=self.headers_formed)
-            self.extract_response_content(sub_response, self.result_abs_txt_file_name)
+            self.extract_response_content(sub_response, self.abs_txt_result_file_name)
             # time.sleep(5)
             count_down_seconds(6)
             if counter >= self.crawl_number:
                 break
                 pass
             pass
-        txt2word(self.result_abs_txt_file_name, self.result_abs_word_file_name)
+        txt2word(self.abs_txt_result_file_name, self.abs_word_result_file_name)
         pass
 
     pass
@@ -773,7 +865,15 @@ def task2():
     pass
 
 
+def task3():
+    directory = r"G:\MineLess\Python\projects\bwcrawler\results2025-05-17"
+    pprint(sort_txt_by_creation_time(directory))
+    pprint(sort_txt_with_date(directory))
+    pass
+
+
 if __name__ == '__main__':
     # task1()
-    task2()
+    # task2()
+    task3()
     pass

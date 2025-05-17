@@ -217,7 +217,7 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
             # WebpagePictureDownloader.download_webpage_pictures(link_url, self.picture_download_directory)
             print('Starting crawling pictures...')
             WebpagePictureDownloader.download_webpage_pictures_of_the_size(link_url,
-                                                                           save_folder=self.picture_download_directory)
+                                                                           save_folder=self.graphic_result_directory)
             pass
             self.finished_url_list.append(link_url)
             finished_urls_text = '\n'.join(self.finished_url_list)

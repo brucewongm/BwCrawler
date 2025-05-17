@@ -237,7 +237,7 @@ class CrawlerNewsUkraineRbcUa(CrawlerBase):
                 continue
             # WebpagePictureDownloader.download_webpage_pictures(link_url, self.picture_download_directory)
             WebpagePictureDownloader.download_webpage_pictures_of_the_size(link_url, '650x410',
-                                                                           self.picture_download_directory)
+                                                                           self.graphic_result_directory)
             if counter >= self.crawl_number:
                 break
                 pass
