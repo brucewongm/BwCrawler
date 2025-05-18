@@ -84,7 +84,13 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
         #
         self.crawl_only_today = False
         #
-        self.picture_download_directory = os.path.join(self.current_directory, 'news_ukraine_downloaded_pictures')
+        date_today = time.strftime("%Y-%m-%d", time.localtime())
+        self.text_result_directory = os.path.join(
+            self.current_directory,
+            'news_ukraine_text_files_{}'.format(date_today))
+        self.picture_download_directory = os.path.join(
+            self.current_directory,
+            'news_ukraine_downloaded_pictures_{}'.format(date_today))
 
     def set_crawl_today(self, condition: bool):
         self.crawl_only_today = condition
@@ -506,7 +512,7 @@ pass
 def task1():
     target_url = 'https://newsukraine.rbc.ua/news'
     referred_url = 'https://newsukraine.rbc.ua/'
-    crawl_number = 30
+    crawl_number = 2
     ins = CrawlerNewsUkraineRbcUaNewsPage(target_url, None, crawl_number)
     ins.set_referred_url(referred_url)
     # ins.set_crawl_today(True)

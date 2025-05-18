@@ -57,6 +57,7 @@ def sort_txt_with_date(folder_path):
         return None
     pass
 
+
 # def sort_txt_by_creation_time(folder_path):
 #     """
 #     获取指定目录下所有TXT文件并按创建时间降序排序
@@ -431,8 +432,6 @@ def get_cookies_from(response):
     return cookiejar
 
 
-
-
 class CrawlerBase(object):
     def __init__(self, target_url, result_txt_file_name=None):
         self.target_url = target_url
@@ -477,14 +476,14 @@ class CrawlerBase(object):
         # 设置文件路径
         self.log_directory = os.path.join(self.current_directory, 'log')
         set_logger(self.logger, moment(), self.log_directory)
-        # parent_folder = os.path.dirname(self.current_directory)
         today = time.strftime("%Y-%m-%d", time.localtime())
         if not self.text_result_directory:
-            self.text_result_directory = os.path.join(self.current_directory, 'crawler_results_{}'.format(today))
+            self.text_result_directory = os.path.join(
+                self.current_directory, 'crawler_results_{}'.format(today))
             pass
         if not self.graphic_result_directory:
-            self.graphic_result_directory = os.path.join(self.current_directory,
-                                                           'crawler_downloaded_images_{}'.format(today))
+            self.graphic_result_directory = os.path.join(
+                self.current_directory, 'crawler_downloaded_images_{}'.format(today))
             pass
         if not self.brand_task_type:
             existed_file_list = sort_txt_with_date(self.text_result_directory)
