@@ -447,10 +447,11 @@ class CrawlerNewsUkraineRbcUaNewsPage(CrawlerBase):
             If a subtitle-like line lacks ending punctuation, enclose it in square brackets 【】.
 
             4. Specific Term Handling
-            If the word "enemy" refers to Russia, translate it directly as "俄罗斯" (Russia).
+            If the word "enemy" refers to Russia, translate it directly as "俄罗斯" or "俄方".
 
             5. Narrative Style
             Translate from a neutral third-party perspective (no editorializing).
+            Never translate any word into "我军" ,use "乌军" instead.
 
             6. Content Purity
             Strip:
