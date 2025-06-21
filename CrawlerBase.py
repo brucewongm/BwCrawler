@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+import random
 import re
 from logging.handlers import RotatingFileHandler
 from pprint import pprint
@@ -347,6 +348,7 @@ def txt2word(abs_full_txt_file_name, abs_full_word_file_name=None):
 
 
 def pause(seconds: int):
+    seconds = random.choice(range(1, seconds))
     for i in range(seconds, 0, -1):
         time.sleep(1)
         print('\rpause counting down {}s'.format(i), end='')
